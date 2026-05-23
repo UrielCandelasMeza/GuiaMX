@@ -18,24 +18,36 @@ services:
       dockerfile: Dockerfile
     container_name: guiamx-api
     restart: always
+    user: root
+    working_dir: /app
     environment:
       DATABASE_URL: "postgresql://user:password@db:5432/guiamx?schema=public"
       PORT: 8000
     ports:
       - "8000:8000"
+    volumes:
+      - ./api:/app:z
+      - /app/node_modules
+    command: sh -c "bunx --bun prisma migrate dev --name init && bunx --bun prisma generate && bun run dev"
     depends_on:
       - db
 
-  # web:
-  #   build:
-  #     context: ./web
-  #     dockerfile: Dockerfile
-  #   container_name: guiamx-web
-  #   restart: always
-  #   ports:
-  #     - "3001:3000"
-  #   depends_on:
-  #     - api
+  web:
+    build:
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: guiamx-web
+    restart: always
+    user: root
+    working_dir: /app
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./web:/app:z
+      - /app/node_modules
+      - /app/.next
+    depends_on:
+      - api
 
 volumes:
   postgres_data:
