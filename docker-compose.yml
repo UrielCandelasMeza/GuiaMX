@@ -1,0 +1,41 @@
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: guiamx-db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: guiamx
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    container_name: guiamx-api
+    restart: always
+    environment:
+      DATABASE_URL: "postgresql://user:password@db:5432/guiamx?schema=public"
+      PORT: 8000
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  # web:
+  #   build:
+  #     context: ./web
+  #     dockerfile: Dockerfile
+  #   container_name: guiamx-web
+  #   restart: always
+  #   ports:
+  #     - "3001:3000"
+  #   depends_on:
+  #     - api
+
+volumes:
+  postgres_data:
