@@ -17,10 +17,10 @@ import { Label } from "@/components/ui/label";
 /* ── Schema ──────────────────────────────────────────────────────────────── */
 const schema = z
   .object({
-    nombre:    z.string().min(2, "Ingresa tu nombre"),
+    nombre: z.string().min(2, "Ingresa tu nombre"),
     apellidos: z.string().min(2, "Ingresa tus apellidos"),
-    correo:    z.string().email("Correo inválido"),
-    password:  z.string().min(8, "Mínimo 8 caracteres"),
+    correo: z.string().email("Correo inválido"),
+    password: z.string().min(8, "Mínimo 8 caracteres"),
     confirmar: z.string(),
   })
   .refine((data) => data.password === data.confirmar, {
@@ -44,13 +44,14 @@ function Field({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <Label htmlFor={id} className="text-xs font-semibold uppercase tracking-wide text-secondary">
+      <Label
+        htmlFor={id}
+        className="text-xs font-semibold uppercase tracking-wide text-brand-900/95"
+      >
         {label}
       </Label>
       {children}
-      {error && (
-        <p className="text-xs font-medium text-red-600">{error}</p>
-      )}
+      {error && <p className="text-xs font-medium text-red-600">{error}</p>}
     </div>
   );
 }
@@ -77,20 +78,24 @@ export default function RegistroPage() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            nombre:    data.nombre,
+            nombre: data.nombre,
             apellidos: data.apellidos,
-            correo:    data.correo,
-            password:  data.password,
+            correo: data.correo,
+            password: data.password,
           }),
-        }
+        },
       );
 
       if (res.status === 201) {
         toast.success("¡Cuenta creada! Ahora puedes iniciar sesión.");
         router.push("/login");
       } else {
-        const body = await res.json().catch(() => ({})) as { message?: string };
-        toast.error(body.message ?? "Error al crear la cuenta. Inténtalo de nuevo.");
+        const body = (await res.json().catch(() => ({}))) as {
+          message?: string;
+        };
+        toast.error(
+          body.message ?? "Error al crear la cuenta. Inténtalo de nuevo.",
+        );
       }
     } catch {
       toast.error("Error de conexión. Verifica tu red e inténtalo de nuevo.");
@@ -113,7 +118,7 @@ export default function RegistroPage() {
           {/* Encabezado */}
           <div className="mb-8">
             <h2 className="text-2xl font-bold text-brand-900">Crear cuenta</h2>
-            <p className="mt-1 text-sm text-secondary">
+            <p className="mt-1 text-sm text-brand-900/95">
               Completa los datos para registrarte.
             </p>
           </div>
@@ -138,7 +143,11 @@ export default function RegistroPage() {
             </Field>
 
             {/* Apellidos */}
-            <Field id="apellidos" label="Apellidos" error={errors.apellidos?.message}>
+            <Field
+              id="apellidos"
+              label="Apellidos"
+              error={errors.apellidos?.message}
+            >
               <Input
                 id="apellidos"
                 type="text"
@@ -150,7 +159,11 @@ export default function RegistroPage() {
             </Field>
 
             {/* Correo */}
-            <Field id="correo" label="Correo electrónico" error={errors.correo?.message}>
+            <Field
+              id="correo"
+              label="Correo electrónico"
+              error={errors.correo?.message}
+            >
               <Input
                 id="correo"
                 type="email"
@@ -162,7 +175,11 @@ export default function RegistroPage() {
             </Field>
 
             {/* Contraseña */}
-            <Field id="password" label="Contraseña" error={errors.password?.message}>
+            <Field
+              id="password"
+              label="Contraseña"
+              error={errors.password?.message}
+            >
               <Input
                 id="password"
                 type="password"
@@ -174,7 +191,11 @@ export default function RegistroPage() {
             </Field>
 
             {/* Confirmar contraseña */}
-            <Field id="confirmar" label="Confirmar contraseña" error={errors.confirmar?.message}>
+            <Field
+              id="confirmar"
+              label="Confirmar contraseña"
+              error={errors.confirmar?.message}
+            >
               <Input
                 id="confirmar"
                 type="password"
@@ -204,9 +225,12 @@ export default function RegistroPage() {
           </form>
 
           {/* Link a login */}
-          <p className="mt-6 text-center text-sm text-secondary">
+          <p className="mt-6 text-center text-sm text-brand-900/95">
             ¿Ya tienes cuenta?{" "}
-            <Link href="/login" className="font-semibold text-brand-600 hover:text-brand-800 no-underline">
+            <Link
+              href="/login"
+              className="font-semibold text-brand-600 hover:text-brand-800 no-underline"
+            >
               Inicia sesión
             </Link>
           </p>

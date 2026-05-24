@@ -77,7 +77,6 @@ model TipoDocumento {
   tipo        TipoDocumentoEnum @unique
   nombre      String // Nombre legible, e.g. "CURP"
   descripcion String?
-  obligatorio Boolean           @default(false)
 
   // Relaciones
   usuariosConDocumento   UserDocumento[]
@@ -94,7 +93,8 @@ model UserDocumento {
   tipoDocumentoId String
   verificado      Boolean  @default(false)
   notas           String?
-  creadoEn        DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   tipoDocumento TipoDocumento @relation(fields: [tipoDocumentoId], references: [id])

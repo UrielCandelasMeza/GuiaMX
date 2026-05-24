@@ -17,7 +17,10 @@ export default function AuthPanel({
 }: AuthPanelProps) {
   return (
     <div className="hidden lg:flex flex-col items-center justify-center gap-6 bg-brand-900 px-12 py-16 text-white h-full">
-      <Building2 className="h-16 w-16 text-brand-100 flex-shrink-0" strokeWidth={1.5} />
+      <Building2
+        className="h-16 w-16 text-brand-100 shrink-0"
+        strokeWidth={1.5}
+      />
 
       <div className="text-center space-y-3 max-w-xs">
         <h1 className="text-3xl font-bold tracking-tight text-white">

@@ -1,24 +1,32 @@
-// TODO: Add session guard via next-auth getServerSession
-// import { getServerSession } from "next-auth";
-// import { redirect } from "next/navigation";
-// import { authOptions } from "@/lib/auth";
-
+import { redirect } from "next/navigation";
+import { SessionProvider } from "next-auth/react";
+import { auth } from "@/lib/auth";
 import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
 
 export default async function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // const session = await getServerSession(authOptions);
-  // if (!session) redirect("/login");
+  // NextAuth v5: obtiene sesión en el servidor
+  const session = await auth();
+
+  // Sin sesión → redirige a login
+  if (!session) {
+    redirect("/login");
+  }
 
   return (
-    <div className="flex min-h-screen flex-col">
+    /*
+     * SessionProvider expone la sesión a los Client Components hijos.
+     * Navbar usa useSession() para mostrar nombre e iniciales del usuario.
+     * Pasamos `session` para evitar un fetch redundante al cliente.
+     */
+    <SessionProvider session={session}>
       <Navbar />
-      <main className="flex flex-1 flex-col">{children}</main>
-      <Footer />
-    </div>
+      <main className="min-h-screen bg-slate-50">
+        {children}
+      </main>
+    </SessionProvider>
   );
 }

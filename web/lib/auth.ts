@@ -39,29 +39,42 @@ export const authConfig: NextAuthConfig = {
     Credentials({
       name: "Credentials",
       credentials: {
-        correo:   { label: "Correo electrónico", type: "email" },
-        password: { label: "Contraseña",          type: "password" },
+        correo: { label: "Correo electrónico", type: "email" },
+        password: { label: "Contraseña", type: "password" },
       },
       async authorize(credentials) {
         const parsed = credentialsSchema.safeParse(credentials);
-        if (!parsed.success) return null;
+        if (!parsed.success) {
+          console.log(
+            "[AUTH] Validación de schema falló:",
+            parsed.error.message,
+          );
+          return null;
+        }
 
         try {
+          console.log("[AUTH] Intentando login con:", parsed.data.correo);
           const res = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
-                correo:   parsed.data.correo,
+                correo: parsed.data.correo,
                 password: parsed.data.password,
               }),
-            }
+            },
           );
 
-          if (!res.ok) return null;
+          console.log("[AUTH] Respuesta del backend:", res.status);
 
-          const data = await res.json() as {
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            console.log("[AUTH] Error del backend:", errorData);
+            return null;
+          }
+
+          const data = (await res.json()) as {
             id: string;
             nombre: string;
             apellidos: string;
@@ -69,14 +82,16 @@ export const authConfig: NextAuthConfig = {
             token: string;
           };
 
+          console.log("[AUTH] Login exitoso para:", data.correo);
           return {
-            id:        data.id,
-            nombre:    data.nombre,
+            id: data.id,
+            nombre: data.nombre,
             apellidos: data.apellidos,
-            email:     data.correo,   // next-auth requiere "email"
-            token:     data.token,
+            email: data.correo,
+            token: data.token,
           };
-        } catch {
+        } catch (error) {
+          console.error("[AUTH] Error en authorize:", error);
           return null;
         }
       },
@@ -85,12 +100,12 @@ export const authConfig: NextAuthConfig = {
 
   pages: {
     signIn: "/login",
-    error:  "/login",
+    error: "/login",
   },
 
   session: {
     strategy: "jwt",
-    maxAge:   60 * 60 * 24 * 7, // 7 días
+    maxAge: 60 * 60 * 24 * 7, // 7 días
   },
 
   callbacks: {
@@ -99,10 +114,10 @@ export const authConfig: NextAuthConfig = {
       if (user) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const t = token as any;
-        t.apiToken  = user.token;
-        t.nombre    = user.nombre;
+        t.apiToken = user.token;
+        t.nombre = user.nombre;
         t.apellidos = user.apellidos;
-        t.correo    = user.email ?? "";
+        t.correo = user.email ?? "";
       }
       return token;
     },
@@ -114,11 +129,11 @@ export const authConfig: NextAuthConfig = {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const s = session as any;
       s.user = {
-        id:        token.sub    ?? "",
-        nombre:    (t.nombre    as string) ?? "",
+        id: token.sub ?? "",
+        nombre: (t.nombre as string) ?? "",
         apellidos: (t.apellidos as string) ?? "",
-        correo:    (t.correo    as string) ?? "",
-        apiToken:  (t.apiToken  as string) ?? "",
+        correo: (t.correo as string) ?? "",
+        apiToken: (t.apiToken as string) ?? "",
       };
       return session;
     },

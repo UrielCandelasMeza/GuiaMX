@@ -38,7 +38,7 @@ function Field({
     <div className="flex flex-col gap-1.5">
       <Label
         htmlFor={id}
-        className="text-xs font-semibold uppercase tracking-wide text-secondary"
+        className="text-xs font-semibold uppercase tracking-wide text-brand-900/95"
       >
         {label}
       </Label>
@@ -104,7 +104,7 @@ function LoginForm() {
       {/* Encabezado */}
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-brand-900">Iniciar sesión</h2>
-        <p className="mt-1 text-sm text-secondary">
+        <p className="mt-1 text-sm text-brand-900/95">
           Ingresa tus datos para continuar.
         </p>
       </div>
