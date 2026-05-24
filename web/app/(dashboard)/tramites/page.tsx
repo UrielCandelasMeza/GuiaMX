@@ -29,7 +29,7 @@ async function fetchTramites(token: string): Promise<Tramite[]> {
 
 /* ── Metadata ────────────────────────────────────────────────────────────── */
 export const metadata = {
-  title: "Trámites — TrámitesMX",
+  title: "Trámites — GuíasMX",
   description: "Explora todos los trámites gubernamentales disponibles.",
 };
 

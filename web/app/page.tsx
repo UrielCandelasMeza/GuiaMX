@@ -74,7 +74,7 @@ export default function LandingPage() {
             className="flex items-center gap-2 text-[#0A0A0A] hover:text-[#737373] transition-colors no-underline"
           >
             <Scale className="h-4 w-4" strokeWidth={1.75} />
-            <span className="text-sm font-semibold tracking-tight">TrámitesMX</span>
+            <span className="text-sm font-semibold tracking-tight">GuíasMX</span>
           </Link>
 
           <div className="hidden items-center gap-8 md:flex">
@@ -118,7 +118,7 @@ export default function LandingPage() {
           </h1>
 
           <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-[#737373]">
-            TrámitesMX te orienta en cualquier gestión gubernamental en México.
+            GuíasMX te orienta en cualquier gestión gubernamental en México.
             Reúne documentos, conoce los pasos exactos y sigue tu avance en tiempo real.
           </p>
 
@@ -234,7 +234,7 @@ export default function LandingPage() {
               <div className="mb-3 flex items-center gap-2">
                 <Scale className="h-4 w-4 text-[#0A0A0A]" strokeWidth={1.75} />
                 <span className="text-sm font-semibold text-[#0A0A0A]">
-                  TrámitesMX
+                  GuíassMX
                 </span>
               </div>
               <p className="text-sm leading-relaxed text-[#737373]">
@@ -265,7 +265,7 @@ export default function LandingPage() {
                 consulta oficial con las dependencias gubernamentales.
               </p>
               <p className="mt-5 text-xs text-[#A3A3A3]">
-                © 2025 TrámitesMX. Todos los derechos reservados.
+                © 2025 GuíasMX. Todos los derechos reservados.
               </p>
             </div>
           </div>

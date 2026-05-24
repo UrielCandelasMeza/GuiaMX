@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import ChatClient from "@/components/chat/ChatClient";
 
 export const metadata = {
-  title: "Asistente IA — TrámitesMX",
+  title: "Asistente IA — GuíasMX",
   description: "Consulta tus dudas sobre trámites con el asistente de inteligencia artificial.",
 };
 

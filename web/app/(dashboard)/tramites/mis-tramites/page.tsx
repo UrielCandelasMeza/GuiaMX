@@ -53,10 +53,10 @@ async function fetchMisTramites(token: string): Promise<TramiteUsuario[]> {
 /* ── EstadoBadge ─────────────────────────────────────────────────────────── */
 function EstadoBadge({ estado }: { estado: EstadoTramite }) {
   const cfg = {
-    PENDIENTE:   { label: "Pendiente",   cls: "bg-slate-100 text-slate-600" },
+    PENDIENTE: { label: "Pendiente", cls: "bg-slate-100 text-slate-600" },
     EN_PROGRESO: { label: "En progreso", cls: "bg-blue-50 text-blue-700" },
-    COMPLETADO:  { label: "Completado",  cls: "bg-green-50 text-green-700" },
-    CANCELADO:   { label: "Cancelado",   cls: "bg-red-50 text-red-600" },
+    COMPLETADO: { label: "Completado", cls: "bg-green-50 text-green-700" },
+    CANCELADO: { label: "Cancelado", cls: "bg-red-50 text-red-600" },
   } as const;
   const { label, cls } = cfg[estado] ?? cfg.PENDIENTE;
 
@@ -75,10 +75,10 @@ function EstadoBadge({ estado }: { estado: EstadoTramite }) {
 /* ── PasoRow ─────────────────────────────────────────────────────────────── */
 function PasoRow({ paso }: { paso: PasoSeguimiento }) {
   const icono = {
-    COMPLETADO:  <CheckCircle2 className="h-4 w-4 text-green-600" />,
+    COMPLETADO: <CheckCircle2 className="h-4 w-4 text-green-600" />,
     EN_PROGRESO: <Clock className="h-4 w-4 text-blue-500" />,
-    OMITIDO:     <span className="h-4 w-4 text-slate-300 text-xs font-bold flex items-center">⏭</span>,
-    PENDIENTE:   <span className="h-4 w-4 rounded-full border-2 border-slate-200 inline-block" />,
+    OMITIDO: <span className="h-4 w-4 text-slate-300 text-xs font-bold flex items-center">⏭</span>,
+    PENDIENTE: <span className="h-4 w-4 rounded-full border-2 border-slate-200 inline-block" />,
   }[paso.estado];
 
   return (
@@ -177,7 +177,7 @@ function TramiteUsuarioCard({ tu }: { tu: TramiteUsuario }) {
 
 /* ── Page ────────────────────────────────────────────────────────────────── */
 export const metadata = {
-  title: "Mis trámites — TrámitesMX",
+  title: "Mis trámites — GuíasMX",
   description: "Seguimiento de tus trámites gubernamentales en curso.",
 };
 

@@ -30,9 +30,9 @@ import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
-  { href: "/chat",                   label: "Chat",          icon: MessageCircle },
-  { href: "/tramites",               label: "Trámites",      icon: FileText },
-  { href: "/tramites/mis-tramites",  label: "Mis trámites",  icon: ClipboardList },
+  { href: "/chat", label: "Chat", icon: MessageCircle },
+  { href: "/tramites", label: "Trámites", icon: FileText },
+  { href: "/tramites/mis-tramites", label: "Mis trámites", icon: ClipboardList },
 ] as const;
 
 function getInitials(nombre: string, apellidos: string): string {
@@ -72,11 +72,11 @@ function NavLink({
 
 function UserMenu() {
   const { data: session } = useSession();
-  const nombre    = (session?.user as { nombre?: string })?.nombre    ?? "";
+  const nombre = (session?.user as { nombre?: string })?.nombre ?? "";
   const apellidos = (session?.user as { apellidos?: string })?.apellidos ?? "";
-  const correo    = (session?.user as { correo?: string })?.correo    ?? "";
-  const fullName  = [nombre, apellidos].filter(Boolean).join(" ") || "Usuario";
-  const initials  = getInitials(nombre, apellidos);
+  const correo = (session?.user as { correo?: string })?.correo ?? "";
+  const fullName = [nombre, apellidos].filter(Boolean).join(" ") || "Usuario";
+  const initials = getInitials(nombre, apellidos);
 
   return (
     <DropdownMenu>
@@ -121,7 +121,7 @@ export default function Navbar() {
           className="flex items-center gap-2 text-[#0A0A0A] hover:text-[#737373] transition-colors no-underline"
         >
           <Scale className="h-4 w-4" strokeWidth={1.75} />
-          <span className="text-sm font-semibold tracking-tight">TrámitesMX</span>
+          <span className="text-sm font-semibold tracking-tight">GuíasMX</span>
         </Link>
 
         <nav className="hidden items-center gap-6 md:flex">
@@ -146,7 +146,7 @@ export default function Navbar() {
               <SheetHeader className="px-6 pt-6 pb-4">
                 <SheetTitle className="flex items-center gap-2 text-[#0A0A0A]">
                   <Scale className="h-4 w-4" strokeWidth={1.75} />
-                  TrámitesMX
+                  GuíasMX
                 </SheetTitle>
               </SheetHeader>
 

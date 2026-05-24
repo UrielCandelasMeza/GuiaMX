@@ -14,7 +14,7 @@ export default function AuthPanel({
       <div className="flex items-center gap-2">
         <Scale className="h-5 w-5 text-[#0A0A0A]" strokeWidth={1.75} />
         <span className="text-base font-semibold tracking-tight text-[#0A0A0A]">
-          TrámitesMX
+          GuíasMX
         </span>
       </div>
 
