@@ -1,0 +1,252 @@
+{
+  "tramite": {
+    "nombre": "Solicitud de Inscripción a Guardería IMSS",
+    "descripcion": "Trámite en línea para solicitar la inscripción de un menor a una guardería del Instituto Mexicano del Seguro Social (IMSS) a través del portal SIGI. Incluye registro de solicitud, captura de datos del menor y padres, selección de guardería y presentación de documentos el día de vigencia del formato.",
+    "monto": 0.00,
+    "activo": true,
+
+    "documentosPrevios": [
+      {
+        "tipoDocumento": "NSS",
+        "obligatorio": true
+      },
+      {
+        "tipoDocumento": "CURP",
+        "obligatorio": true
+      },
+      {
+        "tipoDocumento": "ACTA_NACIMIENTO",
+        "obligatorio": true
+      },
+      {
+        "tipoDocumento": "INE",
+        "obligatorio": true
+      }
+    ],
+
+    "pasos": [
+      {
+        "id": "paso-1",
+        "orden": 1,
+        "titulo": "Acceso al portal SIGI del IMSS",
+        "descripcionCorta": "El usuario ingresa al portal oficial stigi.imss.gob.mx para iniciar la solicitud de inscripción a guardería.",
+        "descripcionLarga": "El usuario accede al Sistema de Información de Guarderías del IMSS (SIGI) en stigi.imss.gob.mx. El portal permite gestionar solicitudes de inscripción a guarderías subrogadas y IMSS administradas. El usuario debe contar con conexión a internet y tener a la mano su NSS y CURP para iniciar el proceso.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": [],
+          "siguientes": ["paso-2"]
+        }
+      },
+      {
+        "id": "paso-2",
+        "orden": 2,
+        "titulo": "Registro de solicitud y selección de modalidad",
+        "descripcionCorta": "El usuario registra una nueva solicitud y selecciona la modalidad de guardería más adecuada a sus características económicas y laborales.",
+        "descripcionLarga": "El sistema presenta las modalidades de guardería disponibles: Guardería IMSS Ordinaria (hijos de madres trabajadoras aseguradas), Guardería de Prestación Indirecta o Subrogada (convenio con guarderías particulares), y Guardería Vecinal y Comunitaria. El usuario selecciona la opción que mejor se adapta a su situación laboral, horario de trabajo, ubicación y características económicas. La selección determina los requisitos específicos del trámite.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-1"],
+          "siguientes": ["paso-3"]
+        }
+      },
+      {
+        "id": "paso-3",
+        "orden": 3,
+        "titulo": "Captura del NSS y CURP del asegurado titular",
+        "descripcionCorta": "El usuario proporciona su NSS y CURP como trabajador asegurado ante el IMSS.",
+        "descripcionLarga": "El sistema solicita el NSS y la CURP del trabajador asegurado (padre o madre) para verificar su relación laboral activa y su derecho a la prestación del servicio de guardería. El IMSS valida que el asegurado tenga cotizaciones vigentes. Si no existe UserDocumento(NSS), se ejecuta automáticamente el sub-trámite 'Obtención de Número de Seguridad Social (NSS)' antes de continuar. Si no existe UserDocumento(CURP), se ejecuta automáticamente el sub-trámite 'Obtención de Documento CURP'.",
+        "activo": true,
+        "condicion": "si UserDocumento(NSS) no existe → ejecutar sub-trámite 'Obtención de Número de Seguridad Social (NSS)' AND si UserDocumento(CURP) no existe → ejecutar sub-trámite 'Obtención de Documento CURP'",
+        "documentosRequeridos": [
+          { "tipoDocumento": "NSS",  "obligatorio": true },
+          { "tipoDocumento": "CURP", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-2"],
+          "siguientes": ["paso-4"]
+        }
+      },
+      {
+        "id": "paso-4",
+        "orden": 4,
+        "titulo": "Captura de la CURP del menor (hijo/a)",
+        "descripcionCorta": "El usuario proporciona la CURP del menor que será inscrito en la guardería.",
+        "descripcionLarga": "El sistema solicita la CURP del menor que se desea inscribir a la guardería. Esta CURP debe corresponder al hijo o hija del asegurado titular y debe estar vigente. La CURP del menor se utiliza para registrar su identidad en el expediente de inscripción y verificar su edad (el menor debe tener entre 43 días y 4 años de edad para ser elegible al servicio).",
+        "activo": true,
+        "condicion": "menor.edad >= 43 dias AND menor.edad <= 4 anios",
+        "documentosRequeridos": [
+          { "tipoDocumento": "CURP", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-3"],
+          "siguientes": ["paso-5"]
+        }
+      },
+      {
+        "id": "paso-5",
+        "orden": 5,
+        "titulo": "Selección de la ubicación de la guardería",
+        "descripcionCorta": "El usuario selecciona la guardería de su preferencia según disponibilidad y ubicación.",
+        "descripcionLarga": "El sistema muestra un mapa y listado de guarderías disponibles cercanas al domicilio o centro de trabajo del asegurado. El usuario filtra por colonia, alcaldía o municipio y selecciona la guardería de su preferencia verificando disponibilidad de lugar, horario de operación y modalidad. El sistema reserva el lugar de forma provisional hasta que se complete el proceso de inscripción.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-4"],
+          "siguientes": ["paso-6"]
+        }
+      },
+      {
+        "id": "paso-6",
+        "orden": 6,
+        "titulo": "Captura del acta de nacimiento del menor",
+        "descripcionCorta": "El usuario adjunta el acta de nacimiento del menor para acreditar el parentesco con el asegurado.",
+        "descripcionLarga": "El sistema solicita el acta de nacimiento del menor en formato digital (JPG, PNG o PDF, máximo 5 MB). El documento debe ser legible, estar vigente y contar con sello oficial del Registro Civil. Acredita el parentesco del menor con el asegurado titular y la edad del menor. Si no existe UserDocumento(ACTA_NACIMIENTO), se ejecuta automáticamente el sub-trámite 'Obtención de Acta de Nacimiento' antes de continuar.",
+        "activo": true,
+        "condicion": "si UserDocumento(ACTA_NACIMIENTO) no existe → ejecutar sub-trámite 'Obtención de Acta de Nacimiento' AND archivo.formato IN ['jpg','jpeg','png','pdf'] AND archivo.tamanio <= 5MB",
+        "documentosRequeridos": [
+          { "tipoDocumento": "ACTA_NACIMIENTO", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-5"],
+          "siguientes": ["paso-7"]
+        }
+      },
+      {
+        "id": "paso-7",
+        "orden": 7,
+        "titulo": "Carga de la solicitud de inscripción a guardería",
+        "descripcionCorta": "El usuario adjunta el formato oficial de solicitud de inscripción a guardería debidamente llenado.",
+        "descripcionLarga": "El sistema genera y el usuario descarga el formato oficial de solicitud de inscripción a guardería del IMSS. El usuario lo llena con los datos del menor y el asegurado, lo firma y lo sube en formato PDF o imagen. Este documento formaliza la solicitud de prestación del servicio de guardería.",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "IDENTIFICACION_SECUNDARIA", "obligatorio": false }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-6"],
+          "siguientes": ["paso-8"]
+        }
+      },
+      {
+        "id": "paso-8",
+        "orden": 8,
+        "titulo": "Carga del certificado médico del menor",
+        "descripcionCorta": "El usuario adjunta el certificado médico del menor que acredita su estado de salud para ingresar a la guardería.",
+        "descripcionLarga": "El sistema solicita el certificado médico del menor expedido por médico del IMSS o médico particular con cédula profesional. El certificado debe indicar que el menor se encuentra en buen estado de salud y es apto para ingresar a la guardería. Debe tener una antigüedad no mayor a 30 días. El documento se sube en formato PDF, JPG o PNG con tamaño máximo de 5 MB.",
+        "activo": true,
+        "condicion": "certificado.fechaExpedicion <= 30 dias AND certificado.expedidoPor IN ['medico_imss', 'medico_particular_con_cedula'] AND archivo.formato IN ['jpg','jpeg','png','pdf'] AND archivo.tamanio <= 5MB",
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-7"],
+          "siguientes": ["paso-9"]
+        }
+      },
+      {
+        "id": "paso-9",
+        "orden": 9,
+        "titulo": "Presentar identificación oficial del asegurado",
+        "descripcionCorta": "El usuario adjunta su INE o pasaporte vigente como identificación oficial.",
+        "descripcionLarga": "El sistema solicita la identificación oficial vigente del asegurado titular: INE/IFE vigente o pasaporte mexicano vigente. El documento debe ser legible por ambas caras. Si no existe UserDocumento(INE), se ejecuta automáticamente el sub-trámite 'Obtención de INE (Credencial para Votar)' antes de continuar. Es suficiente con presentar uno de los dos documentos.",
+        "activo": true,
+        "condicion": "si UserDocumento(INE) no existe → ejecutar sub-trámite 'Obtención de INE (Credencial para Votar)'",
+        "documentosRequeridos": [
+          { "tipoDocumento": "INE",      "obligatorio": false },
+          { "tipoDocumento": "PASAPORTE","obligatorio": false }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-8"],
+          "siguientes": ["paso-10"]
+        }
+      },
+      {
+        "id": "paso-10",
+        "orden": 10,
+        "titulo": "Carga de la cartilla de vacunación del menor",
+        "descripcionCorta": "El usuario adjunta la cartilla de vacunación del menor con esquema completo para su edad.",
+        "descripcionLarga": "El sistema solicita la cartilla de vacunación del menor en formato digital (JPG, PNG o PDF, máximo 5 MB). El esquema de vacunación debe estar completo y actualizado conforme a la edad del menor según el esquema oficial de la Secretaría de Salud. Las páginas deben ser legibles y mostrar las vacunas aplicadas con fecha y firma del médico.",
+        "activo": true,
+        "condicion": "cartilla.esquemaCompleto = true AND cartilla.actualizadaParaEdad = true AND archivo.formato IN ['jpg','jpeg','png','pdf'] AND archivo.tamanio <= 5MB",
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-9"],
+          "siguientes": ["paso-11"]
+        }
+      },
+      {
+        "id": "paso-11",
+        "orden": 11,
+        "titulo": "Captura de la CURP del menor para el expediente",
+        "descripcionCorta": "El sistema registra formalmente la CURP del menor en el expediente de inscripción.",
+        "descripcionLarga": "El sistema confirma y registra la CURP del menor capturada en el paso 4 dentro del expediente formal de inscripción a guardería. El usuario verifica que los datos del menor (nombre, fecha de nacimiento, sexo) coincidan con los mostrados en pantalla a partir de la CURP. Si hay discrepancia, debe corregirse antes de continuar.",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "CURP", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-10"],
+          "siguientes": ["paso-12"]
+        }
+      },
+      {
+        "id": "paso-12",
+        "orden": 12,
+        "titulo": "Carga de constancia de plática de nuevo ingreso",
+        "descripcionCorta": "El usuario adjunta la constancia que acredita haber asistido a la plática de nuevo ingreso del IMSS.",
+        "descripcionLarga": "El IMSS exige que los padres o tutores del menor asistan a una plática informativa de nuevo ingreso a guardería antes de completar la inscripción. La constancia es expedida por el IMSS al finalizar dicha plática y debe adjuntarse en formato PDF, JPG o PNG con tamaño máximo de 5 MB. Sin esta constancia el proceso no puede concluirse.",
+        "activo": true,
+        "condicion": "constancia.expedidaPorIMSS = true AND archivo.formato IN ['jpg','jpeg','png','pdf'] AND archivo.tamanio <= 5MB",
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-11"],
+          "siguientes": ["paso-13"]
+        }
+      },
+      {
+        "id": "paso-13",
+        "orden": 13,
+        "titulo": "Captura de datos del empleador del asegurado",
+        "descripcionCorta": "El usuario ingresa la razón social, dirección y teléfono de la empresa donde trabajan los padres.",
+        "descripcionLarga": "El sistema solicita los datos del empleador del asegurado titular: razón social completa de la empresa, domicilio fiscal (calle, número, colonia, municipio, estado, código postal) y número de teléfono de recursos humanos o contacto. Estos datos permiten al IMSS verificar la relación laboral activa y facilitar la comunicación en caso de emergencia con el menor.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-12"],
+          "siguientes": ["paso-14"]
+        }
+      },
+      {
+        "id": "paso-14",
+        "orden": 14,
+        "titulo": "Generación del folio, impresión y guardado del formato de inscripción",
+        "descripcionCorta": "El sistema genera el folio de inscripción. El usuario imprime y guarda el formato oficial.",
+        "descripcionLarga": "Una vez capturados todos los datos y documentos requeridos, el sistema SIGI genera un folio único de inscripción y el formato oficial de inscripción a guardería con fecha de vigencia. El usuario debe imprimir el formato o guardarlo en formato digital. El formato tiene una vigencia limitada (generalmente 5 días hábiles) dentro de la cual el usuario debe presentarse en la guardería seleccionada con los documentos físicos.",
+        "activo": true,
+        "condicion": "formato.vigencia <= 5 dias habiles",
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-13"],
+          "siguientes": ["paso-15"]
+        }
+      },
+      {
+        "id": "paso-15",
+        "orden": 15,
+        "titulo": "Presentación de documentos físicos en la guardería el día de vigencia",
+        "descripcionCorta": "El usuario lleva todos los documentos requeridos a la guardería seleccionada dentro del plazo de vigencia del formato.",
+        "descripcionLarga": "El asegurado se presenta en la guardería seleccionada el día indicado en el formato de inscripción, dentro del plazo de vigencia. Debe llevar en original y copia: acta de nacimiento del menor, certificado médico, cartilla de vacunación, identificación oficial del asegurado, constancia de plática de nuevo ingreso, CURP del menor y el formato de inscripción impreso con el folio. El personal de la guardería verifica los documentos, registra al menor y confirma la fecha de inicio del servicio.",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "ACTA_NACIMIENTO",  "obligatorio": true },
+          { "tipoDocumento": "INE",              "obligatorio": false },
+          { "tipoDocumento": "PASAPORTE",        "obligatorio": false },
+          { "tipoDocumento": "CURP",             "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-14"],
+          "siguientes": []
+        }
+      }
+    ]
+  }
+}

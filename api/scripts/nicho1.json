@@ -1,0 +1,324 @@
+{
+  "tramite": {
+    "nombre": "Solicitud de Inscripción de Crédito Hipotecario INFONAVIT",
+    "descripcion": "Trámite para solicitar la inscripción de un crédito hipotecario ante el Instituto del Fondo Nacional de la Vivienda para los Trabajadores (INFONAVIT). Incluye selección de tipo de crédito, captura de datos personales, laborales y de la vivienda, pago de operación, verificación documental y emisión de constancia de crédito ante notaría pública.",
+    "monto": 0.00,
+    "activo": true,
+
+    "documentosPrevios": [
+      {
+        "tipoDocumento": "NSS",
+        "obligatorio": true
+      },
+      {
+        "tipoDocumento": "CURP",
+        "obligatorio": true
+      },
+      {
+        "tipoDocumento": "INE",
+        "obligatorio": true
+      },
+      {
+        "tipoDocumento": "ACTA_NACIMIENTO",
+        "obligatorio": true
+      },
+      {
+        "tipoDocumento": "COMPROBANTE_DOMICILIO",
+        "obligatorio": true
+      }
+    ],
+
+    "pasos": [
+      {
+        "id": "paso-1",
+        "orden": 1,
+        "titulo": "Agendar cita en INFONAVIT",
+        "descripcionCorta": "El usuario agenda una cita en el portal oficial de INFONAVIT para entregar la solicitud de crédito y documentación.",
+        "descripcionLarga": "El usuario accede al portal mi.infonavit.org.mx y selecciona el módulo o centro de servicio más cercano. Elige la fecha y hora disponibles para el trámite de inscripción de crédito hipotecario. Al confirmar, el sistema genera un folio de cita que el usuario debe conservar y presentar el día de la visita junto con toda la documentación requerida. Sin cita previa no se realiza la atención.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": [],
+          "siguientes": ["paso-2"]
+        }
+      },
+      {
+        "id": "paso-2",
+        "orden": 2,
+        "titulo": "Selección del tipo de crédito",
+        "descripcionCorta": "El ciudadano selecciona el tipo de crédito hipotecario que desea solicitar.",
+        "descripcionLarga": "El asesor de INFONAVIT presenta al ciudadano las modalidades de crédito disponibles según su perfil: Crédito INFONAVIT (adquisición de vivienda nueva o usada), INFONAVIT Total (complemento con crédito bancario), Cofinavit (con institución financiera), Apoyo INFONAVIT (abono a crédito hipotecario bancario existente) u otras modalidades vigentes. El ciudadano selecciona la opción que mejor se adapta a sus necesidades y capacidad de pago.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-1"],
+          "siguientes": ["paso-3"]
+        }
+      },
+      {
+        "id": "paso-3",
+        "orden": 3,
+        "titulo": "Determinar el monto del crédito",
+        "descripcionCorta": "Se determina el monto del crédito con base en el costo de la vivienda y la capacidad de pago del ciudadano.",
+        "descripcionLarga": "Con base en el tipo de crédito seleccionado, el asesor calcula el monto máximo de crédito al que tiene derecho el ciudadano considerando: saldo de subcuenta de vivienda, salario integrado, puntos acumulados y capacidad de pago mensual. El ciudadano confirma el costo de la vivienda que desea adquirir y se determina si el monto del crédito cubre el total o si se requiere complemento.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-2"],
+          "siguientes": ["paso-4"]
+        }
+      },
+      {
+        "id": "paso-4",
+        "orden": 4,
+        "titulo": "Ingreso de datos de la vivienda",
+        "descripcionCorta": "El ciudadano proporciona los datos del inmueble que desea adquirir.",
+        "descripcionLarga": "El sistema solicita los datos del inmueble objeto del crédito: dirección completa (calle, número, colonia, municipio, estado y código postal), número de registro del inmueble, nombre del vendedor o desarrollador, precio de venta y datos del notario público que formalizará la operación. Los datos deben coincidir con los documentos de la propiedad.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-3"],
+          "siguientes": ["paso-5"]
+        }
+      },
+      {
+        "id": "paso-5",
+        "orden": 5,
+        "titulo": "Ingreso de datos de la empresa donde trabaja el ciudadano",
+        "descripcionCorta": "El ciudadano proporciona los datos de su empleador actual.",
+        "descripcionLarga": "El sistema solicita los datos del empleador del ciudadano: razón social de la empresa, RFC del patrón, domicilio fiscal, teléfono de recursos humanos, nombre del contacto en la empresa y fecha de ingreso laboral. INFONAVIT verifica que el ciudadano tenga relación laboral activa y cotizaciones vigentes ante el IMSS vinculadas al NSS proporcionado.",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "NSS", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-4"],
+          "siguientes": ["paso-6"]
+        }
+      },
+      {
+        "id": "paso-6",
+        "orden": 6,
+        "titulo": "Ingreso del Número de Seguridad Social (NSS)",
+        "descripcionCorta": "El ciudadano proporciona su NSS para vincular el trámite a su historial de cotizaciones.",
+        "descripcionLarga": "El sistema registra el NSS del ciudadano para consultar su historial de cotizaciones ante el IMSS, saldo de subcuenta de vivienda y puntos acumulados en INFONAVIT. Si no existe UserDocumento(NSS), se ejecuta automáticamente el sub-trámite 'Obtención de Número de Seguridad Social (NSS)' antes de continuar.",
+        "activo": true,
+        "condicion": "si UserDocumento(NSS) no existe → ejecutar sub-trámite 'Obtención de Número de Seguridad Social (NSS)'",
+        "documentosRequeridos": [
+          { "tipoDocumento": "NSS", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-5"],
+          "siguientes": ["paso-7"]
+        }
+      },
+      {
+        "id": "paso-7",
+        "orden": 7,
+        "titulo": "Ingreso de CURP",
+        "descripcionCorta": "El ciudadano proporciona su CURP para vincular su identidad al expediente de crédito.",
+        "descripcionLarga": "El sistema registra la CURP del ciudadano para validar su identidad ante el RENAPO y vincularla al expediente de crédito. Si no existe UserDocumento(CURP), se ejecuta automáticamente el sub-trámite 'Obtención de Documento CURP' antes de continuar.",
+        "activo": true,
+        "condicion": "si UserDocumento(CURP) no existe → ejecutar sub-trámite 'Obtención de Documento CURP'",
+        "documentosRequeridos": [
+          { "tipoDocumento": "CURP", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-6"],
+          "siguientes": ["paso-8"]
+        }
+      },
+      {
+        "id": "paso-8",
+        "orden": 8,
+        "titulo": "Ingreso de domicilio del ciudadano",
+        "descripcionCorta": "El ciudadano proporciona su domicilio actual con comprobante vigente.",
+        "descripcionLarga": "El sistema solicita el domicilio actual del ciudadano: calle, número exterior, número interior (opcional), colonia, municipio o alcaldía, estado y código postal. Se requiere comprobante de domicilio con antigüedad no mayor a 3 meses. Si no existe UserDocumento(COMPROBANTE_DOMICILIO), se ejecuta automáticamente el sub-trámite 'Registro de Comprobante de Domicilio' antes de continuar.",
+        "activo": true,
+        "condicion": "si UserDocumento(COMPROBANTE_DOMICILIO) no existe → ejecutar sub-trámite 'Registro de Comprobante de Domicilio'",
+        "documentosRequeridos": [
+          { "tipoDocumento": "COMPROBANTE_DOMICILIO", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-7"],
+          "siguientes": ["paso-9"]
+        }
+      },
+      {
+        "id": "paso-9",
+        "orden": 9,
+        "titulo": "Presentar identificación oficial primaria",
+        "descripcionCorta": "El ciudadano entrega una identificación oficial vigente con fotografía.",
+        "descripcionLarga": "INFONAVIT solicita una identificación oficial vigente con fotografía para verificar la identidad del solicitante. Se acepta INE/IFE, pasaporte mexicano vigente o cartilla del servicio militar nacional. Se requiere original y copia. Es suficiente con presentar al menos uno de los documentos listados.",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "INE",             "obligatorio": false },
+          { "tipoDocumento": "PASAPORTE",       "obligatorio": false },
+          { "tipoDocumento": "CARTILLA_MILITAR","obligatorio": false }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-8"],
+          "siguientes": ["paso-10"]
+        }
+      },
+      {
+        "id": "paso-10",
+        "orden": 10,
+        "titulo": "Registro civil — acta de nacimiento",
+        "descripcionCorta": "El ciudadano entrega su acta de nacimiento original para acreditar su estado civil y registro ante el Registro Civil.",
+        "descripcionLarga": "INFONAVIT solicita el acta de nacimiento original para verificar los datos del ciudadano ante el Registro Civil y confirmar su identidad y estado civil base. El documento debe ser legible, estar en buen estado y contar con sello oficial. Si no existe UserDocumento(ACTA_NACIMIENTO), se ejecuta automáticamente el sub-trámite 'Obtención de Acta de Nacimiento' antes de continuar.",
+        "activo": true,
+        "condicion": "si UserDocumento(ACTA_NACIMIENTO) no existe → ejecutar sub-trámite 'Obtención de Acta de Nacimiento'",
+        "documentosRequeridos": [
+          { "tipoDocumento": "ACTA_NACIMIENTO", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-9"],
+          "siguientes": ["paso-11a", "paso-11b"]
+        }
+      },
+      {
+        "id": "paso-11a",
+        "orden": 11,
+        "titulo": "Régimen patrimonial — sociedad conyugal (casado)",
+        "descripcionCorta": "El ciudadano casado bajo sociedad conyugal adjunta el acta de matrimonio y documentos del cónyuge.",
+        "descripcionLarga": "Rama CASADO_SOCIEDAD_CONYUGAL. Si el ciudadano está casado bajo el régimen de sociedad conyugal, debe presentar: acta de matrimonio original o copia certificada, identificación oficial del cónyuge (INE, pasaporte o cartilla militar), CURP del cónyuge y comprobante de domicilio conjunto si aplica. El cónyuge debe firmar documentos de consentimiento en la notaría para la operación hipotecaria. Condición de activación: estado civil = casado AND regimen = sociedad conyugal.",
+        "activo": true,
+        "condicion": "estadoCivil = 'casado' AND regimenPatrimonial = 'sociedad_conyugal'",
+        "documentosRequeridos": [
+          { "tipoDocumento": "IDENTIFICACION_SECUNDARIA", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-10"],
+          "siguientes": ["paso-12"]
+        }
+      },
+      {
+        "id": "paso-11b",
+        "orden": 12,
+        "titulo": "Régimen patrimonial — separación de bienes o soltero",
+        "descripcionCorta": "El ciudadano soltero o casado bajo separación de bienes continúa sin documentos adicionales de cónyuge.",
+        "descripcionLarga": "Rama SOLTERO_O_SEPARACION_BIENES. Si el ciudadano es soltero, divorciado, viudo o está casado bajo el régimen de separación de bienes, no se requieren documentos adicionales del cónyuge. En caso de separación de bienes, se debe presentar el acta de matrimonio con la inscripción del régimen. En caso de divorcio o viudez, se presenta el acta correspondiente. Condición de activación: estadoCivil IN ['soltero', 'divorciado', 'viudo'] OR (estadoCivil = 'casado' AND regimenPatrimonial = 'separacion_bienes').",
+        "activo": true,
+        "condicion": "estadoCivil IN ['soltero','divorciado','viudo'] OR (estadoCivil = 'casado' AND regimenPatrimonial = 'separacion_bienes')",
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-10"],
+          "siguientes": ["paso-12"]
+        }
+      },
+      {
+        "id": "paso-12",
+        "orden": 13,
+        "titulo": "Ingreso de datos de familiares del ciudadano",
+        "descripcionCorta": "El ciudadano proporciona los datos de sus beneficiarios o familiares directos.",
+        "descripcionLarga": "El sistema solicita los datos de los familiares del ciudadano que serán registrados como beneficiarios del crédito hipotecario y del seguro de vida asociado: nombre completo, parentesco, fecha de nacimiento, CURP y porcentaje de beneficio asignado a cada uno. Se deben registrar al menos un beneficiario. Los datos deben coincidir con los documentos de identidad de cada familiar.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-11a", "paso-11b"],
+          "siguientes": ["paso-13"]
+        }
+      },
+      {
+        "id": "paso-13",
+        "orden": 14,
+        "titulo": "Realizar el depósito de pago de la operación",
+        "descripcionCorta": "El ciudadano realiza el depósito correspondiente al pago de gastos de la operación hipotecaria.",
+        "descripcionLarga": "El ciudadano realiza el pago de los gastos de la operación hipotecaria que incluyen: avalúo del inmueble, gastos notariales, estudio socioeconómico y derechos de inscripción al Registro Público de la Propiedad. El pago se realiza mediante transferencia bancaria o depósito en institución autorizada. Se debe conservar el comprobante de pago para presentarlo en los pasos siguientes.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-12"],
+          "siguientes": ["paso-14"]
+        }
+      },
+      {
+        "id": "paso-14",
+        "orden": 15,
+        "titulo": "Presentar INE",
+        "descripcionCorta": "El ciudadano entrega su INE vigente para la integración formal del expediente.",
+        "descripcionLarga": "INFONAVIT requiere la credencial para votar (INE/IFE) vigente como documento central del expediente de crédito hipotecario. Si no existe UserDocumento(INE), se ejecuta automáticamente el sub-trámite 'Obtención de INE (Credencial para Votar)' antes de continuar. Se requiere original y copia legible por ambas caras.",
+        "activo": true,
+        "condicion": "si UserDocumento(INE) no existe → ejecutar sub-trámite 'Obtención de INE (Credencial para Votar)'",
+        "documentosRequeridos": [
+          { "tipoDocumento": "INE", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-13"],
+          "siguientes": ["paso-15"]
+        }
+      },
+      {
+        "id": "paso-15",
+        "orden": 16,
+        "titulo": "Presentar acta de nacimiento",
+        "descripcionCorta": "El ciudadano entrega su acta de nacimiento para la integración formal del expediente.",
+        "descripcionLarga": "INFONAVIT integra el acta de nacimiento al expediente formal del crédito hipotecario. Debe ser el original o copia certificada expedida por el Registro Civil. Si no existe UserDocumento(ACTA_NACIMIENTO), se ejecuta automáticamente el sub-trámite 'Obtención de Acta de Nacimiento' antes de continuar.",
+        "activo": true,
+        "condicion": "si UserDocumento(ACTA_NACIMIENTO) no existe → ejecutar sub-trámite 'Obtención de Acta de Nacimiento'",
+        "documentosRequeridos": [
+          { "tipoDocumento": "ACTA_NACIMIENTO", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-14"],
+          "siguientes": ["paso-16"]
+        }
+      },
+      {
+        "id": "paso-16",
+        "orden": 17,
+        "titulo": "Firma del formato de autorización de consulta de información crediticia",
+        "descripcionCorta": "El ciudadano firma el formato que autoriza a INFONAVIT consultar su historial crediticio en el buró de crédito.",
+        "descripcionLarga": "El ciudadano firma el formato oficial de autorización para que INFONAVIT realice la consulta de su historial crediticio ante las Sociedades de Información Crediticia (Buró de Crédito y Círculo de Crédito). Este paso es obligatorio por ley y sin él no puede continuar el proceso de evaluación del crédito. El documento firmado se integra al expediente.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-15"],
+          "siguientes": ["paso-17"]
+        }
+      },
+      {
+        "id": "paso-17",
+        "orden": 18,
+        "titulo": "Verificación de la documentación e inicio del proceso de inscripción",
+        "descripcionCorta": "El personal de INFONAVIT verifica toda la documentación integrada e inicia formalmente el proceso de inscripción de la solicitud.",
+        "descripcionLarga": "El personal de INFONAVIT revisa que el expediente esté completo y que todos los documentos sean legibles, vigentes y correspondan al solicitante. Verifica la consistencia de los datos entre los distintos documentos. Si el expediente está completo, se registra la solicitud en el sistema y se asigna un número de expediente oficial. Si falta algún documento o hay inconsistencias, se notifica al ciudadano y se le otorga un plazo para subsanarlas.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-16"],
+          "siguientes": ["paso-18"]
+        }
+      },
+      {
+        "id": "paso-18",
+        "orden": 19,
+        "titulo": "Evaluación de criterios de cumplimiento para la solicitud de crédito",
+        "descripcionCorta": "INFONAVIT evalúa si el ciudadano cumple los criterios para ser sujeto de crédito hipotecario.",
+        "descripcionLarga": "El sistema de INFONAVIT evalúa automáticamente los criterios de elegibilidad del solicitante: puntos mínimos acumulados (116 puntos), relación de deuda-ingreso, historial crediticio positivo en el buró de crédito, cotizaciones continuas ante el IMSS, capacidad de pago mensual suficiente y que el inmueble cumpla los requisitos de habitabilidad del INFONAVIT. El resultado puede ser: aprobado, aprobado con condiciones o rechazado con motivo específico.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-17"],
+          "siguientes": ["paso-19"]
+        }
+      },
+      {
+        "id": "paso-19",
+        "orden": 20,
+        "titulo": "Emisión de constancia de crédito y entrega del expediente en notaría pública",
+        "descripcionCorta": "INFONAVIT emite la constancia de crédito con fecha límite de uso del recurso y entrega el expediente al ciudadano en una notaría pública.",
+        "descripcionLarga": "Una vez aprobada la solicitud, INFONAVIT emite la constancia de crédito que incluye: monto autorizado, tasa de interés, plazo de amortización y fecha límite para hacer uso del recurso (generalmente 60 días naturales). El expediente completo se entrega al ciudadano en la notaría pública designada, donde se formalizará la escritura de compraventa y el contrato de crédito hipotecario. A partir de este momento el ciudadano tiene el plazo indicado para escriturar la propiedad ante el notario.",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "IDENTIFICACION_SECUNDARIA", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-18"],
+          "siguientes": []
+        }
+      }
+    ]
+  }
+}
