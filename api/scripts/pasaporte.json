@@ -1,0 +1,118 @@
+{
+  "tramite": {
+    "nombre": "Obtención de Pasaporte Mexicano",
+    "descripcion": "Trámite presencial para obtener el pasaporte mexicano ante la Secretaría de Relaciones Exteriores (SRE). Requiere agendar cita, presentar documentación oficial, realizar el pago de derechos y acudir al módulo para la captura de datos biométricos y entrega del pasaporte.",
+    "monto": 1745.00,
+    "activo": true,
+
+    "documentosPrevios": [
+      {
+        "tipoDocumento": "ACTA_NACIMIENTO",
+        "obligatorio": true
+      },
+      {
+        "tipoDocumento": "CURP",
+        "obligatorio": true
+      },
+      {
+        "tipoDocumento": "COMPROBANTE_DOMICILIO",
+        "obligatorio": true
+      }
+    ],
+
+    "pasos": [
+      {
+        "id": "paso-1",
+        "orden": 1,
+        "titulo": "Agendar cita en el portal de la SRE",
+        "descripcionCorta": "El usuario agenda una cita en línea en el portal oficial de la Secretaría de Relaciones Exteriores.",
+        "descripcionLarga": "El usuario accede al portal pasaportes.sre.gob.mx y selecciona la delegación o módulo de atención más cercano a su domicilio. Elige la fecha y hora disponibles para su cita de trámite de pasaporte. Al confirmar, el sistema genera un folio de cita que el usuario debe conservar y presentar el día de su visita. Sin cita previa no se realiza la atención.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": [],
+          "siguientes": ["paso-2"]
+        }
+      },
+      {
+        "id": "paso-2",
+        "orden": 2,
+        "titulo": "Presentar acta de nacimiento",
+        "descripcionCorta": "El usuario entrega su acta de nacimiento original certificada.",
+        "descripcionLarga": "El usuario presenta su acta de nacimiento en original expedida por el Registro Civil. Debe ser legible, estar en buen estado y contar con sello oficial. No se acepta fotocopia simple ni acta en mal estado. Si no existe UserDocumento(ACTA_NACIMIENTO), se ejecuta automáticamente el sub-trámite 'Obtención de Acta de Nacimiento' antes de continuar.",
+        "activo": true,
+        "condicion": "si UserDocumento(ACTA_NACIMIENTO) no existe → ejecutar sub-trámite 'Obtención de Acta de Nacimiento'",
+        "documentosRequeridos": [
+          { "tipoDocumento": "ACTA_NACIMIENTO", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-1"],
+          "siguientes": ["paso-3"]
+        }
+      },
+      {
+        "id": "paso-3",
+        "orden": 3,
+        "titulo": "Presentar comprobante de nacionalidad (CURP)",
+        "descripcionCorta": "El usuario entrega su CURP como comprobante de nacionalidad mexicana.",
+        "descripcionLarga": "La SRE acepta la CURP impresa o en formato digital como comprobante de nacionalidad. El documento debe estar vigente y ser legible. Si no existe UserDocumento(CURP), se ejecuta automáticamente el sub-trámite 'Obtención de Documento CURP' antes de continuar.",
+        "activo": true,
+        "condicion": "si UserDocumento(CURP) no existe → ejecutar sub-trámite 'Obtención de Documento CURP'",
+        "documentosRequeridos": [
+          { "tipoDocumento": "CURP", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-2"],
+          "siguientes": ["paso-4"]
+        }
+      },
+      {
+        "id": "paso-4",
+        "orden": 4,
+        "titulo": "Presentar identificación oficial con fotografía",
+        "descripcionCorta": "El usuario presenta una identificación oficial vigente con fotografía.",
+        "descripcionLarga": "La SRE acepta como identificación oficial con fotografía cualquiera de los siguientes documentos: INE/IFE vigente, cédula profesional, cartilla del servicio militar nacional o pasaporte anterior (en caso de renovación). Se requiere original y copia. Es suficiente con presentar al menos uno de los documentos listados.",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "INE",                    "obligatorio": false },
+          { "tipoDocumento": "CARTILLA_MILITAR",       "obligatorio": false },
+          { "tipoDocumento": "IDENTIFICACION_SECUNDARIA", "obligatorio": false }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-3"],
+          "siguientes": ["paso-5"]
+        }
+      },
+      {
+        "id": "paso-5",
+        "orden": 5,
+        "titulo": "Realizar el pago de derechos",
+        "descripcionCorta": "El usuario realiza el pago oficial del trámite de pasaporte.",
+        "descripcionLarga": "El usuario realiza el pago de derechos correspondiente según el tipo y vigencia del pasaporte solicitado. El pago se realiza en bancos autorizados, tiendas de conveniencia o en línea mediante el portal e5cinco del SAT. Se debe conservar el comprobante de pago original para presentarlo en el módulo. Sin comprobante de pago no se procede con el trámite.",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "COMPROBANTE_DOMICILIO", "obligatorio": false }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-4"],
+          "siguientes": ["paso-6"]
+        }
+      },
+      {
+        "id": "paso-6",
+        "orden": 6,
+        "titulo": "Captura de datos biométricos y entrega del pasaporte",
+        "descripcionCorta": "El personal de la SRE toma fotografía, firma y huellas digitales del usuario y entrega el pasaporte.",
+        "descripcionLarga": "El usuario se presenta en el módulo de la SRE en la fecha y hora de su cita con todos los documentos y el comprobante de pago. El personal realiza la captura de datos biométricos: fotografía de frente, firma digitalizada y huellas dactilares. El usuario revisa y confirma sus datos antes de la impresión. El pasaporte se entrega en el mismo acto o en un plazo de hasta 10 días hábiles según el tipo de trámite (ordinario o urgente). Al recibirlo se registra UserDocumento(PASAPORTE).",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "PASAPORTE", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-5"],
+          "siguientes": []
+        }
+      }
+    ]
+  }
+}

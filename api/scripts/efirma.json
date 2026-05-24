@@ -1,0 +1,344 @@
+{
+  "tramite": {
+    "nombre": "Obtención / Renovación de e.firma (SAT)",
+    "descripcion": "Trámite para obtener por primera vez o renovar la e.firma (antes FIEL) ante el Servicio de Administración Tributaria. El flujo varía según si es primera vez, si la firma está vigente o cuánto tiempo lleva vencida.",
+    "monto": 0.00,
+    "activo": true,
+
+    "documentosPrevios": [],
+
+    "pasos": [
+
+      {
+        "id": "paso-1",
+        "orden": 1,
+        "titulo": "Determinar si es primera vez o renovación",
+        "descripcionCorta": "Punto de decisión inicial: primera vez o ya tuvo e.firma.",
+        "descripcionLarga": "Se determina si el usuario nunca ha obtenido una e.firma (rama PRIMERA_VEZ, órdenes 2-7) o si ya tiene o tuvo una (rama RENOVACION, continúa en orden 8). Condición: si UserDocumento(EFIRMA) no existe → rama primera vez; si existe → rama renovación.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": [],
+          "siguientes": ["paso-2a", "paso-2b"]
+        }
+      },
+
+      {
+        "id": "paso-2a",
+        "orden": 2,
+        "titulo": "Presentar identificación oficial primaria (primera vez)",
+        "descripcionCorta": "El usuario presenta INE, pasaporte o cartilla militar.",
+        "descripcionLarga": "Rama PRIMERA_VEZ. El SAT acepta como identificación primaria el INE/IFE, el pasaporte mexicano vigente o la cartilla del servicio militar. Se requiere original y copia. Condición: al menos uno de los tres documentos debe estar presente.",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "INE",              "obligatorio": false },
+          { "tipoDocumento": "PASAPORTE",        "obligatorio": false },
+          { "tipoDocumento": "CARTILLA_MILITAR", "obligatorio": false }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-1"],
+          "siguientes": ["paso-3a"]
+        }
+      },
+
+      {
+        "id": "paso-3a",
+        "orden": 3,
+        "titulo": "Proporcionar CURP (primera vez)",
+        "descripcionCorta": "El usuario comparte su Clave Única de Registro de Población.",
+        "descripcionLarga": "Rama PRIMERA_VEZ. El SAT necesita la CURP para vincular la e.firma a la identidad del usuario. Si no existe UserDocumento(CURP), se ejecuta automáticamente el sub-trámite 'Obtención de Documento CURP' antes de continuar.",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "CURP", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-2a"],
+          "siguientes": ["paso-4a"]
+        }
+      },
+
+      {
+        "id": "paso-4a",
+        "orden": 4,
+        "titulo": "Comprobante de domicilio (primera vez)",
+        "descripcionCorta": "El usuario proporciona un comprobante de domicilio reciente (no mayor a 3 meses).",
+        "descripcionLarga": "Rama PRIMERA_VEZ. Se acepta recibo de luz, agua, teléfono, gas o estado de cuenta bancario. El documento debe estar a nombre del usuario y tener una antigüedad máxima de 3 meses. Si no existe UserDocumento(COMPROBANTE_DOMICILIO), se ejecuta el sub-trámite 'Registro de Comprobante de Domicilio'.",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "COMPROBANTE_DOMICILIO", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-3a"],
+          "siguientes": ["paso-5a"]
+        }
+      },
+
+      {
+        "id": "paso-5a",
+        "orden": 5,
+        "titulo": "Proporcionar correo electrónico personal (primera vez)",
+        "descripcionCorta": "El usuario indica un correo electrónico activo.",
+        "descripcionLarga": "Rama PRIMERA_VEZ. El SAT enviará notificaciones y los archivos de la e.firma a este correo. Debe ser un correo activo y personal. Si no existe UserDocumento(CORREO_PERSONAL), se ejecuta el sub-trámite 'Registro de Correo Personal'.",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "CORREO_PERSONAL", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-4a"],
+          "siguientes": ["paso-6a"]
+        }
+      },
+
+      {
+        "id": "paso-6a",
+        "orden": 6,
+        "titulo": "Llevar una memoria USB (primera vez)",
+        "descripcionCorta": "El usuario lleva una USB vacía para almacenar los archivos de su e.firma.",
+        "descripcionLarga": "Rama PRIMERA_VEZ. En la cita presencial el SAT generará los archivos .key y .cer de la e.firma. El usuario debe traer una USB formateada en FAT32 con al menos 10 MB libres. No se entrega ningún archivo por otro medio.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-5a"],
+          "siguientes": ["paso-7a"]
+        }
+      },
+
+      {
+        "id": "paso-7a",
+        "orden": 7,
+        "titulo": "Agendar cita en el SAT (primera vez)",
+        "descripcionCorta": "El usuario agenda su cita presencial en citas.sat.gob.mx.",
+        "descripcionLarga": "Rama PRIMERA_VEZ. El usuario ingresa a citas.sat.gob.mx, selecciona el servicio 'e.firma' y la oficina del SAT más cercana. Debe llevar todos los documentos de los pasos anteriores y la USB. Al completar la cita presencial se generan los archivos y el trámite de primera vez queda concluido. Se registra UserDocumento(EFIRMA).",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "EFIRMA", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-6a"],
+          "siguientes": []
+        }
+      },
+
+      {
+        "id": "paso-2b",
+        "orden": 8,
+        "titulo": "Verificar vigencia de la e.firma actual",
+        "descripcionCorta": "Se determina si la e.firma existente aún está dentro de su periodo de validez (4 años).",
+        "descripcionLarga": "Rama RENOVACION. La e.firma tiene una vigencia de 4 años. El usuario consulta su estado en el portal del SAT con su RFC. Condición: si la e.firma está vigente → continúa en paso-3ba (redirección al portal); si está vencida → continúa en paso-3bb (evaluar tiempo de vencimiento).",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "EFIRMA", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-1"],
+          "siguientes": ["paso-3ba", "paso-3bb"]
+        }
+      },
+
+      {
+        "id": "paso-3ba",
+        "orden": 9,
+        "titulo": "e.firma vigente — uso directo en el portal SAT",
+        "descripcionCorta": "La e.firma está vigente. El usuario puede utilizarla directamente sin renovar.",
+        "descripcionLarga": "Rama RENOVACION_VIGENTE. No es necesario realizar ningún trámite adicional. El usuario ingresa a sat.gob.mx y utiliza su e.firma con los archivos .key y .cer que ya posee. El trámite concluye en este punto.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-2b"],
+          "siguientes": []
+        }
+      },
+
+      {
+        "id": "paso-3bb",
+        "orden": 10,
+        "titulo": "Determinar tiempo de vencimiento de la e.firma",
+        "descripcionCorta": "Se evalúa si la e.firma lleva menos o más de un año vencida.",
+        "descripcionLarga": "Rama RENOVACION_VENCIDA. El SAT establece procesos distintos según el tiempo transcurrido desde el vencimiento. Condición: si vencimiento < 1 año → rama menos de un año (paso-4bba); si vencimiento >= 1 año → rama más de un año (paso-4bbb).",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-2b"],
+          "siguientes": ["paso-4bba", "paso-4bbb"]
+        }
+      },
+
+      {
+        "id": "paso-4bba",
+        "orden": 11,
+        "titulo": "Presentar identificación oficial (menos de 1 año vencida)",
+        "descripcionCorta": "El usuario presenta INE, pasaporte o cartilla militar.",
+        "descripcionLarga": "Rama RENOVACION_MENOS_1_ANO. Para la renovación con menos de un año vencida se requiere identificación oficial. Se acepta INE/IFE, pasaporte mexicano vigente o cartilla del servicio militar. Se requiere al menos uno de los tres documentos.",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "INE",              "obligatorio": false },
+          { "tipoDocumento": "PASAPORTE",        "obligatorio": false },
+          { "tipoDocumento": "CARTILLA_MILITAR", "obligatorio": false }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-3bb"],
+          "siguientes": ["paso-5bba"]
+        }
+      },
+
+      {
+        "id": "paso-5bba",
+        "orden": 12,
+        "titulo": "Proporcionar correo electrónico (menos de 1 año vencida)",
+        "descripcionCorta": "El usuario indica su correo electrónico activo.",
+        "descripcionLarga": "Rama RENOVACION_MENOS_1_ANO. El SAT utilizará este correo para enviar el código de verificación y los archivos resultantes de la renovación. Si no existe UserDocumento(CORREO_PERSONAL), se ejecuta el sub-trámite 'Registro de Correo Personal'.",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "CORREO_PERSONAL", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-4bba"],
+          "siguientes": ["paso-6bba"]
+        }
+      },
+
+      {
+        "id": "paso-6bba",
+        "orden": 13,
+        "titulo": "Proporcionar número de teléfono (menos de 1 año vencida)",
+        "descripcionCorta": "El usuario registra su número de teléfono celular para autenticación de dos factores.",
+        "descripcionLarga": "Rama RENOVACION_MENOS_1_ANO. El SAT enviará un SMS con un código de verificación a este número durante el proceso de renovación. Si no existe UserDocumento(NUMERO_TELEFONO), se ejecuta el sub-trámite 'Registro de Número de Teléfono'.",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "NUMERO_TELEFONO", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-5bba"],
+          "siguientes": ["paso-7bba"]
+        }
+      },
+
+      {
+        "id": "paso-7bba",
+        "orden": 14,
+        "titulo": "Verificación biométrica por video (menos de 1 año vencida)",
+        "descripcionCorta": "El usuario graba un video pronunciando una frase aleatoria para validar su identidad.",
+        "descripcionLarga": "Rama RENOVACION_MENOS_1_ANO. Como parte de la verificación biométrica remota, el SAT solicita un video corto en el que el usuario pronuncie una frase aleatoria. El video se analiza para confirmar que es una persona real y que coincide con los datos de su identificación.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-6bba"],
+          "siguientes": ["paso-8bba"]
+        }
+      },
+
+      {
+        "id": "paso-8bba",
+        "orden": 15,
+        "titulo": "Agendar cita para renovar la e.firma (menos de 1 año vencida)",
+        "descripcionCorta": "El usuario agenda su cita presencial en el SAT para completar la renovación.",
+        "descripcionLarga": "Rama RENOVACION_MENOS_1_ANO. El usuario ingresa a citas.sat.gob.mx y selecciona el servicio de renovación de e.firma. Debe llevar su identificación oficial y la USB con sus archivos anteriores si aún los conserva. Al completar la cita se actualiza UserDocumento(EFIRMA).",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "EFIRMA", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-7bba"],
+          "siguientes": []
+        }
+      },
+
+      {
+        "id": "paso-4bbb",
+        "orden": 16,
+        "titulo": "Presentar identificación oficial (más de 1 año vencida)",
+        "descripcionCorta": "El usuario lleva su identificación oficial vigente: INE, pasaporte o cartilla militar.",
+        "descripcionLarga": "Rama RENOVACION_MAS_1_ANO. El proceso es completamente presencial. Se requiere presentar la identificación original junto con una copia. Se requiere al menos uno de los tres documentos listados.",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "INE",              "obligatorio": false },
+          { "tipoDocumento": "PASAPORTE",        "obligatorio": false },
+          { "tipoDocumento": "CARTILLA_MILITAR", "obligatorio": false }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-3bb"],
+          "siguientes": ["paso-5bbb"]
+        }
+      },
+
+      {
+        "id": "paso-5bbb",
+        "orden": 17,
+        "titulo": "Llevar una memoria USB (más de 1 año vencida)",
+        "descripcionCorta": "El usuario trae una USB vacía para capturar los nuevos archivos de su e.firma.",
+        "descripcionLarga": "Rama RENOVACION_MAS_1_ANO. Dado que la firma expiró hace más de un año, los archivos anteriores ya no son válidos. El SAT generará un nuevo par de archivos .key y .cer en la USB proporcionada. Debe estar formateada en FAT32 con al menos 10 MB libres.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-4bbb"],
+          "siguientes": ["paso-6bbb"]
+        }
+      },
+
+      {
+        "id": "paso-6bbb",
+        "orden": 18,
+        "titulo": "Proporcionar correo electrónico personal (más de 1 año vencida)",
+        "descripcionCorta": "El usuario indica un correo electrónico activo para el registro de la renovación.",
+        "descripcionLarga": "Rama RENOVACION_MAS_1_ANO. El SAT asociará la nueva e.firma a este correo y enviará notificaciones sobre el trámite. Si no existe UserDocumento(CORREO_PERSONAL), se ejecuta el sub-trámite 'Registro de Correo Personal'.",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "CORREO_PERSONAL", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-5bbb"],
+          "siguientes": ["paso-7bbb-fisica", "paso-7bbb-moral"]
+        }
+      },
+
+      {
+        "id": "paso-7bbb-fisica",
+        "orden": 19,
+        "titulo": "Conclusión para persona física (más de 1 año vencida)",
+        "descripcionCorta": "El trámite de renovación para persona física ha concluido.",
+        "descripcionLarga": "Rama RENOVACION_MAS_1_ANO — PERSONA_FISICA. Una vez completados todos los pasos anteriores y realizada la cita presencial en el SAT, el usuario recibirá los nuevos archivos de su e.firma en la USB proporcionada. Se actualiza UserDocumento(EFIRMA).",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "EFIRMA", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-6bbb"],
+          "siguientes": []
+        }
+      },
+
+      {
+        "id": "paso-7bbb-moral",
+        "orden": 20,
+        "titulo": "Presentar acta constitutiva y documentos de persona moral (más de 1 año vencida)",
+        "descripcionCorta": "El usuario presenta el acta constitutiva y el manifiesto del representante legal.",
+        "descripcionLarga": "Rama RENOVACION_MAS_1_ANO — PERSONA_MORAL. Las personas morales deben presentar el acta constitutiva original o copia certificada, así como un manifiesto firmado por el representante legal que acredite la facultad para tramitar la e.firma en nombre de la empresa. Nota de desarrollo: se recomienda agregar ACTA_CONSTITUTIVA y MANIFIESTO_REPRESENTANTE al enum TipoDocumentoEnum del schema para modelar estos documentos correctamente. Por ahora se utiliza CERTIFICACION_ACADEMICA como sustituto provisional.",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "CERTIFICACION_ACADEMICA", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-6bbb"],
+          "siguientes": ["paso-8bbb-moral"]
+        }
+      },
+
+      {
+        "id": "paso-8bbb-moral",
+        "orden": 21,
+        "titulo": "Conclusión para persona moral (más de 1 año vencida)",
+        "descripcionCorta": "El trámite de renovación para persona moral ha concluido.",
+        "descripcionLarga": "Rama RENOVACION_MAS_1_ANO — PERSONA_MORAL. Presentados el acta constitutiva y el manifiesto, el SAT procesa la renovación de la e.firma en nombre de la empresa. Se actualiza UserDocumento(EFIRMA) asociado al representante legal.",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "EFIRMA", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-7bbb-moral"],
+          "siguientes": []
+        }
+      }
+
+    ]
+  }
+}

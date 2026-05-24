@@ -1,0 +1,169 @@
+{
+  "tramite": {
+    "nombre": "Obtención de INE (Credencial para Votar)",
+    "descripcion": "Trámite presencial para obtener la credencial para votar emitida por el Instituto Nacional Electoral (INE). Requiere agendar una cita en el módulo más cercano, presentarse con la documentación requerida y esperar la entrega de la credencial en un plazo de 2 semanas a 1 mes.",
+    "monto": 0.00,
+    "activo": true,
+
+    "documentosPrevios": [
+      {
+        "tipoDocumento": "ACTA_NACIMIENTO",
+        "obligatorio": true
+      },
+      {
+        "tipoDocumento": "COMPROBANTE_DOMICILIO",
+        "obligatorio": true
+      },
+      {
+        "tipoDocumento": "CURP",
+        "obligatorio": true
+      }
+    ],
+
+    "pasos": [
+      {
+        "id": "paso-1",
+        "orden": 1,
+        "titulo": "Agendar cita en el portal de la INE",
+        "descripcionCorta": "El usuario agenda una cita en línea en el portal oficial de la INE.",
+        "descripcionLarga": "El usuario accede al portal oficial mimodulo.ine.mx y selecciona el módulo de atención más cercano a su domicilio. Elige la fecha y hora disponibles para su cita de trámite de credencial por primera vez (o reposición). Al confirmar, el sistema genera un folio de cita que el usuario debe guardar y presentar el día de su visita al módulo.",
+        "activo": true,
+        "condicion": "usuario selecciona modulo, fecha y hora disponibles → sistema genera folio de cita",
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": [],
+          "siguientes": ["paso-2"]
+        }
+      },
+      {
+        "id": "paso-2",
+        "orden": 2,
+        "titulo": "Acudir al módulo de atención",
+        "descripcionCorta": "El usuario se presenta físicamente en el módulo de la INE en la fecha y hora agendadas.",
+        "descripcionLarga": "El usuario acude de manera presencial al módulo de atención de la INE en la fecha y hora de su cita. Debe presentar el folio de cita generado en el paso anterior, ya sea impreso o en formato digital desde su dispositivo móvil. El personal del módulo registra la llegada y asigna turno de atención.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-1"],
+          "siguientes": ["paso-3"]
+        }
+      },
+      {
+        "id": "paso-3",
+        "orden": 3,
+        "titulo": "Presentar acta de nacimiento",
+        "descripcionCorta": "El usuario entrega su acta de nacimiento original al personal del módulo.",
+        "descripcionLarga": "El usuario presenta su acta de nacimiento en original. El sistema verifica si el usuario ya cuenta con un documento de tipo ACTA_NACIMIENTO registrado en su perfil. Si no existe, se ejecuta automáticamente el sub-trámite 'Obtención de Acta de Nacimiento' antes de continuar. El acta debe ser legible y estar en buen estado; no se acepta fotocopia simple.",
+        "activo": true,
+        "condicion": "si UserDocumento(ACTA_NACIMIENTO) no existe → ejecutar sub-trámite 'Obtención de Acta de Nacimiento'",
+        "documentosRequeridos": [
+          {
+            "tipoDocumento": "ACTA_NACIMIENTO",
+            "obligatorio": true
+          }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-2"],
+          "siguientes": ["paso-4"]
+        }
+      },
+      {
+        "id": "paso-4",
+        "orden": 4,
+        "titulo": "Presentar comprobante de domicilio",
+        "descripcionCorta": "El usuario entrega su comprobante de domicilio vigente al personal del módulo.",
+        "descripcionLarga": "El usuario presenta un comprobante de domicilio con antigüedad no mayor a 3 meses. Se aceptan recibos de luz, gas, agua, teléfono fijo o estado de cuenta bancario. El sistema verifica si el usuario ya cuenta con un documento de tipo COMPROBANTE_DOMICILIO registrado. Si no existe, se ejecuta automáticamente el sub-trámite 'Registro de Comprobante de Domicilio' antes de continuar.",
+        "activo": true,
+        "condicion": "si UserDocumento(COMPROBANTE_DOMICILIO) no existe → ejecutar sub-trámite 'Registro de Comprobante de Domicilio'",
+        "documentosRequeridos": [
+          {
+            "tipoDocumento": "COMPROBANTE_DOMICILIO",
+            "obligatorio": true
+          }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-3"],
+          "siguientes": ["paso-5a", "paso-5b"]
+        }
+      },
+      {
+        "id": "paso-5a",
+        "orden": 5,
+        "titulo": "Presentar identificación primaria",
+        "descripcionCorta": "El usuario presenta un documento de identidad primario: pasaporte, cartilla militar u otro equivalente.",
+        "descripcionLarga": "El usuario presenta una identificación primaria vigente. Se aceptan: pasaporte mexicano vigente, cartilla del servicio militar nacional, cédula profesional con fotografía, o credencial de INAPAM. El sistema verifica si el usuario ya cuenta con algún documento de tipo PASAPORTE o CARTILLA_MILITAR registrado. Si el usuario no cuenta con identificación primaria, debe ir al paso de testigos (paso-5b).",
+        "activo": true,
+        "condicion": "modo === 'con_identificacion_primaria' AND UserDocumento(PASAPORTE OR CARTILLA_MILITAR OR IDENTIFICACION_SECUNDARIA) existe",
+        "documentosRequeridos": [
+          {
+            "tipoDocumento": "PASAPORTE",
+            "obligatorio": false
+          },
+          {
+            "tipoDocumento": "CARTILLA_MILITAR",
+            "obligatorio": false
+          },
+          {
+            "tipoDocumento": "IDENTIFICACION_SECUNDARIA",
+            "obligatorio": false
+          }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-4"],
+          "siguientes": ["paso-6"]
+        }
+      },
+      {
+        "id": "paso-5b",
+        "orden": 6,
+        "titulo": "Presentar dos testigos (sin identificación primaria)",
+        "descripcionCorta": "El usuario que no cuenta con identificación primaria se presenta con dos testigos del mismo municipio.",
+        "descripcionLarga": "En caso de no contar con ninguna identificación primaria, el usuario debe presentarse acompañado de dos testigos que cumplan los siguientes requisitos: (1) ser ciudadanos mexicanos mayores de 18 años, (2) vivir en el mismo municipio o alcaldía que el solicitante, (3) ser personas de confianza y conocidas del solicitante, (4) presentar su propia credencial del INE vigente como identificación. Los testigos firman una declaración ante el personal del módulo.",
+        "activo": true,
+        "condicion": "modo === 'sin_identificacion_primaria' AND testigos.cantidad = 2 AND testigos.municipio = usuario.municipio AND testigos.edad >= 18",
+        "documentosRequeridos": [
+          {
+            "tipoDocumento": "IDENTIFICACION_SECUNDARIA",
+            "obligatorio": false
+          }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-4"],
+          "siguientes": ["paso-6"]
+        }
+      },
+      {
+        "id": "paso-6",
+        "orden": 7,
+        "titulo": "Captura de datos biométricos y firma",
+        "descripcionCorta": "El personal del módulo toma fotografía, firma, huellas digitales y digitaliza los documentos del usuario.",
+        "descripcionLarga": "El personal del módulo de la INE realiza la captura de los datos biométricos del solicitante: fotografía de frente, firma digitalizada y huellas dactilares de ambas manos. Simultáneamente digitaliza los documentos presentados. El usuario revisa y confirma que sus datos personales capturados sean correctos antes de finalizar el trámite en módulo.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-5a", "paso-5b"],
+          "siguientes": ["paso-7"]
+        }
+      },
+      {
+        "id": "paso-7",
+        "orden": 8,
+        "titulo": "Entrega de la credencial INE",
+        "descripcionCorta": "El usuario recibe su credencial del INE en el módulo en un plazo de 2 semanas a 1 mes.",
+        "descripcionLarga": "Una vez procesada la solicitud, la INE fabrica y envía la credencial al módulo donde se realizó el trámite. El usuario debe regresar al mismo módulo en un plazo estimado de 2 semanas a 1 mes para recoger su credencial. Recibirá una notificación por correo electrónico o SMS cuando la credencial esté lista. Al recogerla, debe presentar el folio de cita original y una identificación provisional si la tiene.",
+        "activo": true,
+        "condicion": "plazo.minimo = 14 dias AND plazo.maximo = 30 dias AND notificacion.canal IN ['correo', 'sms']",
+        "documentosRequeridos": [
+          {
+            "tipoDocumento": "INE",
+            "obligatorio": true
+          }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-6"],
+          "siguientes": []
+        }
+      }
+    ]
+  }
+}

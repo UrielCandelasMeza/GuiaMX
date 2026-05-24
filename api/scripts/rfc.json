@@ -1,0 +1,120 @@
+{
+  "tramite": {
+    "nombre": "Obtención de RFC (Registro Federal de Contribuyentes)",
+    "descripcion": "Trámite presencial ante el Servicio de Administración Tributaria (SAT) para obtener la Clave del Registro Federal de Contribuyentes. Requiere agendar cita, presentar documentación oficial y llevar una USB para recibir el acuse de recepción con y sin homoclave.",
+    "monto": 0.00,
+    "activo": true,
+
+    "documentosPrevios": [
+      {
+        "tipoDocumento": "CURP",
+        "obligatorio": true
+      },
+      {
+        "tipoDocumento": "COMPROBANTE_DOMICILIO",
+        "obligatorio": true
+      },
+      {
+        "tipoDocumento": "EFIRMA",
+        "obligatorio": false
+      }
+    ],
+
+    "pasos": [
+      {
+        "id": "paso-1",
+        "orden": 1,
+        "titulo": "Agendar cita en el portal del SAT",
+        "descripcionCorta": "El usuario agenda una cita presencial en citas.sat.gob.mx.",
+        "descripcionLarga": "El usuario accede al portal citas.sat.gob.mx y selecciona el servicio 'Inscripción al RFC'. Elige la oficina del SAT más cercana a su domicilio y una fecha y hora disponibles. Al confirmar, el sistema genera un folio de cita que el usuario debe conservar y presentar el día de la visita. Sin cita previa no se realiza la atención.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": [],
+          "siguientes": ["paso-2"]
+        }
+      },
+      {
+        "id": "paso-2",
+        "orden": 2,
+        "titulo": "Presentar CURP",
+        "descripcionCorta": "El usuario entrega su CURP como documento base para la inscripción al RFC.",
+        "descripcionLarga": "El SAT utiliza la CURP para vincular el RFC a la identidad del contribuyente. El usuario presenta la CURP impresa o en formato digital. Si no existe UserDocumento(CURP), se ejecuta automáticamente el sub-trámite 'Obtención de Documento CURP' antes de continuar.",
+        "activo": true,
+        "condicion": "si UserDocumento(CURP) no existe → ejecutar sub-trámite 'Obtención de Documento CURP'",
+        "documentosRequeridos": [
+          { "tipoDocumento": "CURP", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-1"],
+          "siguientes": ["paso-3"]
+        }
+      },
+      {
+        "id": "paso-3",
+        "orden": 3,
+        "titulo": "Presentar identificación oficial con fotografía",
+        "descripcionCorta": "El usuario entrega una identificación oficial vigente con fotografía.",
+        "descripcionLarga": "El SAT acepta como identificación oficial con fotografía cualquiera de los siguientes documentos: INE/IFE vigente, pasaporte mexicano vigente, cartilla del servicio militar nacional o cédula profesional. Se requiere original y copia. Es suficiente con presentar al menos uno de los documentos listados.",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "INE",                     "obligatorio": false },
+          { "tipoDocumento": "PASAPORTE",               "obligatorio": false },
+          { "tipoDocumento": "CARTILLA_MILITAR",        "obligatorio": false },
+          { "tipoDocumento": "IDENTIFICACION_SECUNDARIA", "obligatorio": false }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-2"],
+          "siguientes": ["paso-4"]
+        }
+      },
+      {
+        "id": "paso-4",
+        "orden": 4,
+        "titulo": "Presentar comprobante de domicilio",
+        "descripcionCorta": "El usuario entrega un comprobante de domicilio vigente no mayor a 3 meses.",
+        "descripcionLarga": "El SAT solicita un comprobante de domicilio fiscal con antigüedad no mayor a 3 meses. Se acepta recibo de luz, agua, gas, teléfono fijo o estado de cuenta bancario a nombre del usuario. Si no existe UserDocumento(COMPROBANTE_DOMICILIO), se ejecuta automáticamente el sub-trámite 'Registro de Comprobante de Domicilio' antes de continuar.",
+        "activo": true,
+        "condicion": "si UserDocumento(COMPROBANTE_DOMICILIO) no existe → ejecutar sub-trámite 'Registro de Comprobante de Domicilio'",
+        "documentosRequeridos": [
+          { "tipoDocumento": "COMPROBANTE_DOMICILIO", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-3"],
+          "siguientes": ["paso-5"]
+        }
+      },
+      {
+        "id": "paso-5",
+        "orden": 5,
+        "titulo": "Presentar e.firma y memoria USB",
+        "descripcionCorta": "El usuario presenta su e.firma vigente y lleva una USB para almacenar el acuse del RFC.",
+        "descripcionLarga": "El SAT requiere la e.firma del contribuyente para vincularla al RFC durante el proceso de inscripción. Si no existe UserDocumento(EFIRMA), se ejecuta automáticamente el sub-trámite 'Obtención / Renovación de e.firma (SAT)' antes de continuar. Adicionalmente, el usuario debe traer una memoria USB formateada en FAT32 con al menos 10 MB libres para recibir el acuse de recepción del RFC con y sin homoclave en formato PDF.",
+        "activo": true,
+        "condicion": "si UserDocumento(EFIRMA) no existe → ejecutar sub-trámite 'Obtención / Renovación de e.firma (SAT)' AND usb.formato = 'FAT32' AND usb.espacioLibre >= 10MB",
+        "documentosRequeridos": [
+          { "tipoDocumento": "EFIRMA", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-4"],
+          "siguientes": ["paso-6"]
+        }
+      },
+      {
+        "id": "paso-6",
+        "orden": 6,
+        "titulo": "Obtención del acuse de RFC con y sin homoclave",
+        "descripcionCorta": "El SAT entrega en la USB el acuse de recepción del RFC con homoclave y sin homoclave.",
+        "descripcionLarga": "Una vez validada toda la documentación, el personal del SAT genera y guarda en la USB del usuario dos archivos PDF: (1) acuse de recepción del RFC sin homoclave (clave base de 10 caracteres) y (2) acuse de recepción del RFC con homoclave (clave completa de 13 caracteres). Ambos documentos tienen validez oficial. No se almacenan los archivos en el servidor; solo se registra el evento de obtención en UserDocumento(RFC).",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "RFC", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-5"],
+          "siguientes": []
+        }
+      }
+    ]
+  }
+}

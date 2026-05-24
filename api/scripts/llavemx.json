@@ -1,0 +1,152 @@
+{
+  "tramite": {
+    "nombre": "Registro de Llave MX",
+    "descripcion": "Trámite para crear una cuenta en el portal oficial de Llave MX (gob.mx). Permite a los ciudadanos acceder a servicios digitales del Gobierno Federal de México. Requiere CURP, domicilio, correo electrónico y número de teléfono vigentes.",
+    "monto": 0.00,
+    "activo": true,
+
+    "documentosPrevios": [
+      {
+        "tipoDocumento": "CURP",
+        "obligatorio": true
+      },
+      {
+        "tipoDocumento": "COMPROBANTE_DOMICILIO",
+        "obligatorio": true
+      },
+      {
+        "tipoDocumento": "CORREO_PERSONAL",
+        "obligatorio": true
+      },
+      {
+        "tipoDocumento": "NUMERO_TELEFONO",
+        "obligatorio": true
+      }
+    ],
+
+    "pasos": [
+      {
+        "id": "paso-1",
+        "orden": 1,
+        "titulo": "Acceso al portal y creación de cuenta",
+        "descripcionCorta": "El usuario entra al portal oficial de Llave MX y selecciona 'Crear cuenta'.",
+        "descripcionLarga": "El sistema redirige al usuario al portal oficial id.gob.mx. El usuario da clic en el botón 'Crear cuenta' para iniciar el proceso de registro. Este paso no requiere ningún documento previo; únicamente confirma la intención del usuario de registrarse en el sistema de identidad digital del Gobierno Federal.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": [],
+          "siguientes": ["paso-2"]
+        }
+      },
+      {
+        "id": "paso-2",
+        "orden": 2,
+        "titulo": "Ingreso y verificación de CURP",
+        "descripcionCorta": "El usuario proporciona su CURP. Si no está registrada, se ejecuta el sub-trámite de obtención de CURP.",
+        "descripcionLarga": "El portal solicita la clave CURP de 18 caracteres. El sistema verifica si el usuario ya cuenta con un documento de tipo CURP en su perfil (UserDocumento). Si no existe, se ejecuta automáticamente el sub-trámite 'Obtención de Documento CURP' antes de continuar. El flujo no avanza hasta que la CURP esté disponible y validada.",
+        "activo": true,
+        "condicion": "si UserDocumento(CURP) no existe → ejecutar sub-trámite 'Obtención de Documento CURP'",
+        "documentosRequeridos": [
+          {
+            "tipoDocumento": "CURP",
+            "obligatorio": true
+          }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-1"],
+          "siguientes": ["paso-3"]
+        }
+      },
+      {
+        "id": "paso-3",
+        "orden": 3,
+        "titulo": "Ingreso y verificación de domicilio",
+        "descripcionCorta": "El usuario proporciona su domicilio postal. Si no está registrado, se ejecuta el sub-trámite de comprobante de domicilio.",
+        "descripcionLarga": "El portal solicita el domicilio completo del usuario: calle, número exterior, número interior (opcional), colonia, municipio o alcaldía, estado y código postal. El sistema verifica si el usuario ya cuenta con un documento de tipo COMPROBANTE_DOMICILIO en su perfil. Si no existe, se ejecuta automáticamente el sub-trámite 'Registro de Comprobante de Domicilio' antes de continuar.",
+        "activo": true,
+        "condicion": "si UserDocumento(COMPROBANTE_DOMICILIO) no existe → ejecutar sub-trámite 'Registro de Comprobante de Domicilio'",
+        "documentosRequeridos": [
+          {
+            "tipoDocumento": "COMPROBANTE_DOMICILIO",
+            "obligatorio": true
+          }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-2"],
+          "siguientes": ["paso-4"]
+        }
+      },
+      {
+        "id": "paso-4",
+        "orden": 4,
+        "titulo": "Ingreso y verificación de correo electrónico",
+        "descripcionCorta": "El usuario proporciona su correo personal. Si no está registrado, se ejecuta el sub-trámite de correo personal.",
+        "descripcionLarga": "El portal solicita la dirección de correo electrónico personal del usuario. El sistema verifica si ya existe un documento de tipo CORREO_PERSONAL en el perfil del usuario. Si no existe, se ejecuta automáticamente el sub-trámite 'Registro de Correo Personal' antes de continuar. El correo debe tener formato válido (usuario@dominio.extension).",
+        "activo": true,
+        "condicion": "si UserDocumento(CORREO_PERSONAL) no existe → ejecutar sub-trámite 'Registro de Correo Personal'",
+        "documentosRequeridos": [
+          {
+            "tipoDocumento": "CORREO_PERSONAL",
+            "obligatorio": true
+          }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-3"],
+          "siguientes": ["paso-5"]
+        }
+      },
+      {
+        "id": "paso-5",
+        "orden": 5,
+        "titulo": "Ingreso y verificación de número de teléfono",
+        "descripcionCorta": "El usuario proporciona su número de teléfono personal. Si no está registrado, se ejecuta el sub-trámite de número de teléfono.",
+        "descripcionLarga": "El portal solicita el número de teléfono personal del usuario con lada incluida. El sistema verifica si ya existe un documento de tipo NUMERO_TELEFONO en el perfil del usuario. Si no existe, se ejecuta automáticamente el sub-trámite 'Registro de Número de Teléfono' antes de continuar. Se acepta formato nacional (10 dígitos) e internacional (+52XXXXXXXXXX).",
+        "activo": true,
+        "condicion": "si UserDocumento(NUMERO_TELEFONO) no existe → ejecutar sub-trámite 'Registro de Número de Teléfono'",
+        "documentosRequeridos": [
+          {
+            "tipoDocumento": "NUMERO_TELEFONO",
+            "obligatorio": true
+          }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-4"],
+          "siguientes": ["paso-6"]
+        }
+      },
+      {
+        "id": "paso-6",
+        "orden": 6,
+        "titulo": "Creación de contraseña segura",
+        "descripcionCorta": "El usuario establece una contraseña segura para su cuenta Llave MX.",
+        "descripcionLarga": "El usuario ingresa y confirma una contraseña para su cuenta. El sistema valida que cumpla los criterios de seguridad: mínimo 8 caracteres, al menos una mayúscula, una minúscula, un número y un carácter especial (!@#$%^&*). Se recomienda usar una contraseña única no utilizada en otros servicios. El campo de confirmación debe coincidir exactamente con el campo de contraseña.",
+        "activo": true,
+        "condicion": "password.length >= 8 AND password MATCH /^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)(?=.*[!@#$%^&*])/",
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-5"],
+          "siguientes": ["paso-7"]
+        }
+      },
+      {
+        "id": "paso-7",
+        "orden": 7,
+        "titulo": "Verificación en dos pasos",
+        "descripcionCorta": "El sistema envía un código de verificación por correo o SMS para confirmar la identidad del usuario.",
+        "descripcionLarga": "El sistema envía un código de verificación de 6 dígitos al correo electrónico o al número de teléfono registrados, a elección del usuario. El código tiene una vigencia de 10 minutos. El usuario ingresa el código recibido para completar la verificación de identidad y activar su cuenta Llave MX. Si el código expira, el usuario puede solicitar uno nuevo.",
+        "activo": true,
+        "condicion": "canal IN ['correo', 'sms'] AND codigo.longitud = 6 AND codigo.vigencia <= 10 minutos",
+        "documentosRequeridos": [
+          {
+            "tipoDocumento": "LLAVE_MX",
+            "obligatorio": true
+          }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-6"],
+          "siguientes": []
+        }
+      }
+    ]
+  }
+}

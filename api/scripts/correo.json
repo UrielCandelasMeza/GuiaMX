@@ -1,0 +1,32 @@
+{
+  "tramite": {
+    "nombre": "Registro de Correo Personal",
+    "descripcion": "Trámite para registrar y verificar el correo electrónico personal del usuario mediante un código de confirmación enviado a la dirección proporcionada.",
+    "monto": 0.00,
+    "activo": true,
+
+    "documentosPrevios": [],
+
+    "pasos": [
+      {
+        "id": "paso-1",
+        "orden": 1,
+        "titulo": "Ingreso del correo electrónico",
+        "descripcionCorta": "El usuario captura su dirección de correo electrónico personal.",
+        "descripcionLarga": "El usuario ingresa su dirección de correo electrónico personal. El sistema valida que el formato sea correcto (usuario@dominio.extension) y que la dirección no esté ya registrada por otro usuario en el sistema. Si el formato es inválido o el correo ya existe, se notifica al usuario y se solicita uno diferente.",
+        "activo": true,
+        "condicion": "correo.formato MATCH /^[a-zA-Z0-9._%+\\-]+@[a-zA-Z0-9.\\-]+\\.[a-zA-Z]{2,}$/ AND correo NOT IN usuarios.correo",
+        "documentosRequeridos": [
+          {
+            "tipoDocumento": "CORREO_PERSONAL",
+            "obligatorio": true
+          }
+        ],
+        "dependencias": {
+          "anteriores": [],
+          "siguientes": []
+        }
+      }
+    ]
+  }
+}

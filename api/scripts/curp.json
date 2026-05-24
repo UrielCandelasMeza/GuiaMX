@@ -1,0 +1,95 @@
+{
+  "tramite": {
+    "nombre": "Obtención de Documento CURP",
+    "descripcion": "Trámite para registrar y descargar el documento de la Clave Única de Registro de Población (CURP). Permite el ingreso mediante código directo o datos brutos del titular, y genera un PDF oficial con la información validada.",
+    "monto": 0.00,
+    "activo": true,
+
+    "documentosPrevios": [
+      {
+        "tipoDocumento": "CURP",
+        "obligatorio": true
+      }
+    ],
+
+    "pasos": [
+      {
+        "id": "paso-1",
+        "orden": 1,
+        "titulo": "Selección de modo de ingreso",
+        "descripcionCorta": "El usuario elige cómo proporcionará su información.",
+        "descripcionLarga": "El sistema presenta dos opciones al usuario: (A) ingresar directamente la clave CURP de 18 caracteres, o (B) ingresar sus datos brutos personales para que el sistema construya y valide la CURP.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": [],
+          "siguientes": ["paso-2a", "paso-2b"]
+        }
+      },
+      {
+        "id": "paso-2a",
+        "orden": 2,
+        "titulo": "Ingreso de CURP por código directo",
+        "descripcionCorta": "El usuario escribe su CURP de 18 caracteres.",
+        "descripcionLarga": "Se activa cuando el usuario seleccionó el modo codigo_directo. El sistema solicita la clave CURP completa de 18 caracteres y la valida contra el patrón oficial del RENAPO.",
+        "activo": true,
+        "condicion": "modo === 'codigo_directo'",
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-1"],
+          "siguientes": ["paso-3"]
+        }
+      },
+      {
+        "id": "paso-2b",
+        "orden": 3,
+        "titulo": "Ingreso de datos brutos del titular",
+        "descripcionCorta": "El usuario proporciona sus datos personales para construir la CURP.",
+        "descripcionLarga": "Se activa cuando el usuario seleccionó el modo datos_brutos. El sistema solicita nombre, apellidos, fecha de nacimiento, sexo, estado de nacimiento, homoclave y dígito verificador.",
+        "activo": true,
+        "condicion": "modo === 'datos_brutos'",
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-1"],
+          "siguientes": ["paso-3"]
+        }
+      },
+      {
+        "id": "paso-3",
+        "orden": 4,
+        "titulo": "Validación y construcción del documento JSON",
+        "descripcionCorta": "El sistema valida la CURP y genera el documento JSON estructurado.",
+        "descripcionLarga": "El sistema toma la CURP obtenida (por código o construida desde datos brutos) y genera el documento JSON oficial con todos los campos descompuestos: titular, segmentos internos y metadatos.",
+        "activo": true,
+        "documentosRequeridos": [
+          {
+            "tipoDocumento": "CURP",
+            "obligatorio": true
+          }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-2a", "paso-2b"],
+          "siguientes": ["paso-4"]
+        }
+      },
+      {
+        "id": "paso-4",
+        "orden": 5,
+        "titulo": "Generación y descarga del PDF",
+        "descripcionCorta": "El sistema genera el PDF oficial de la CURP y lo pone disponible para descarga.",
+        "descripcionLarga": "A partir del documento JSON generado en el paso anterior, el sistema construye un PDF con el formato oficial del RENAPO: encabezado institucional, datos del titular, QR con la clave CURP y pie de página con fecha de emisión. No se almacena el archivo en el servidor.",
+        "activo": true,
+        "documentosRequeridos": [
+          {
+            "tipoDocumento": "CURP",
+            "obligatorio": true
+          }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-3"],
+          "siguientes": []
+        }
+      }
+    ]
+  }
+}

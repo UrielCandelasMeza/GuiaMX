@@ -1,0 +1,112 @@
+{
+  "tramite": {
+    "nombre": "Obtención de Acta de Nacimiento",
+    "descripcion": "Trámite para obtener el acta de nacimiento en formato digital a través del portal oficial. Requiere autenticación con Llave MX, CURP vigente, pago de derechos y verificación de identidad mediante captcha.",
+    "monto": 51.00,
+    "activo": true,
+
+    "documentosPrevios": [
+      {
+        "tipoDocumento": "LLAVE_MX",
+        "obligatorio": true
+      },
+      {
+        "tipoDocumento": "CURP",
+        "obligatorio": true
+      },
+      {
+        "tipoDocumento": "CORREO_PERSONAL",
+        "obligatorio": true
+      }
+    ],
+
+    "pasos": [
+      {
+        "id": "paso-1",
+        "orden": 1,
+        "titulo": "Autenticación con Llave MX",
+        "descripcionCorta": "El usuario inicia sesión con sus credenciales de Llave MX.",
+        "descripcionLarga": "El sistema redirige al portal de Llave MX donde el usuario ingresa su usuario y contraseña registrados. Una vez autenticado correctamente, el sistema recibe el token de sesión y habilita el acceso al trámite.",
+        "activo": true,
+        "documentosRequeridos": [
+          {
+            "tipoDocumento": "LLAVE_MX",
+            "obligatorio": true
+          }
+        ],
+        "dependencias": {
+          "anteriores": [],
+          "siguientes": ["paso-2"]
+        }
+      },
+      {
+        "id": "paso-2",
+        "orden": 2,
+        "titulo": "Verificación de CURP",
+        "descripcionCorta": "El sistema verifica si el usuario ya cuenta con un documento CURP registrado.",
+        "descripcionLarga": "El sistema consulta el registro de documentos del usuario (UserDocumento) buscando un documento de tipo CURP. Si existe, avanza al siguiente paso. Si no existe, se ejecuta automáticamente el sub-trámite 'Obtención de Documento CURP' antes de continuar. El flujo no avanza hasta que la CURP esté disponible y validada.",
+        "activo": true,
+        "condicion": "si UserDocumento(CURP) no existe → ejecutar sub-trámite 'Obtención de Documento CURP'",
+        "documentosRequeridos": [
+          {
+            "tipoDocumento": "CURP",
+            "obligatorio": true
+          }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-1"],
+          "siguientes": ["paso-3"]
+        }
+      },
+      {
+        "id": "paso-3",
+        "orden": 3,
+        "titulo": "Pago de derechos",
+        "descripcionCorta": "El usuario realiza el pago del monto requerido para recibir el folio de seguimiento.",
+        "descripcionLarga": "El sistema presenta la orden de pago por el monto del trámite. El usuario completa el pago mediante los métodos disponibles (tarjeta, transferencia o pago en ventanilla). Al confirmarse el pago, el sistema genera y envía un folio de seguimiento al correo personal registrado del usuario.",
+        "activo": true,
+        "documentosRequeridos": [
+          {
+            "tipoDocumento": "CORREO_PERSONAL",
+            "obligatorio": true
+          }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-2"],
+          "siguientes": ["paso-4"]
+        }
+      },
+      {
+        "id": "paso-4",
+        "orden": 4,
+        "titulo": "Verificación de captcha",
+        "descripcionCorta": "El usuario completa un captcha para verificar que es una persona.",
+        "descripcionLarga": "El sistema presenta un desafío captcha para confirmar que la solicitud es realizada por un humano y no un proceso automatizado. El trámite no avanza hasta que el captcha sea resuelto correctamente.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-3"],
+          "siguientes": ["paso-5"]
+        }
+      },
+      {
+        "id": "paso-5",
+        "orden": 5,
+        "titulo": "Ingreso de folio y descarga del acta",
+        "descripcionCorta": "El usuario ingresa el folio de seguimiento y descarga el PDF del acta de nacimiento.",
+        "descripcionLarga": "El usuario ingresa el folio de seguimiento recibido en su correo personal. El sistema valida el folio contra el pago registrado y, si es correcto, genera y habilita la descarga del PDF del acta de nacimiento. No se almacena el archivo en el servidor; solo se registra el evento de descarga en los metadatos del UserDocumento.",
+        "activo": true,
+        "documentosRequeridos": [
+          {
+            "tipoDocumento": "ACTA_NACIMIENTO",
+            "obligatorio": true
+          }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-4"],
+          "siguientes": []
+        }
+      }
+    ]
+  }
+}

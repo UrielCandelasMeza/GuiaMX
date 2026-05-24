@@ -1,0 +1,118 @@
+{
+  "tramite": {
+    "nombre": "Obtención de Licencia de Conducir Tipo A (CDMX)",
+    "descripcion": "Trámite presencial ante la Secretaría de Movilidad (SEMOVI) de la Ciudad de México para obtener la licencia de conducir tipo A (automovilista). Requiere línea de captura de finanzas, cita en SEMOVI, presentación de documentos en el módulo de tesorería, pago de derechos y captura biométrica.",
+    "monto": 741.00,
+    "activo": true,
+
+    "documentosPrevios": [
+      {
+        "tipoDocumento": "COMPROBANTE_DOMICILIO",
+        "obligatorio": true
+      }
+    ],
+
+    "pasos": [
+      {
+        "id": "paso-1",
+        "orden": 1,
+        "titulo": "Generar línea de captura en el portal de Finanzas CDMX",
+        "descripcionCorta": "El usuario ingresa al portal de Finanzas de la CDMX para obtener su línea de captura de pago.",
+        "descripcionLarga": "El usuario accede al portal finanzas.cdmx.gob.mx y selecciona el servicio de licencia de conducir tipo A para generar la línea de captura correspondiente al pago de derechos. La línea de captura tiene una vigencia limitada y debe usarse antes de vencer. Se debe conservar el número generado para los pasos siguientes.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": [],
+          "siguientes": ["paso-2"]
+        }
+      },
+      {
+        "id": "paso-2",
+        "orden": 2,
+        "titulo": "Agendar cita en el portal de SEMOVI",
+        "descripcionCorta": "El usuario agenda una cita presencial en el portal oficial de citas de la SEMOVI.",
+        "descripcionLarga": "El usuario accede al portal de citas de la SEMOVI (semovi.cdmx.gob.mx) y selecciona el módulo de atención más cercano a su domicilio. Elige la fecha y hora disponibles para el trámite de licencia tipo A. Al confirmar, el sistema genera un folio de cita que el usuario debe conservar y presentar el día de su visita. Sin cita previa no se realiza la atención.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-1"],
+          "siguientes": ["paso-3"]
+        }
+      },
+      {
+        "id": "paso-3",
+        "orden": 3,
+        "titulo": "Acudir al módulo de tesorería con los documentos",
+        "descripcionCorta": "El usuario se presenta en el módulo de tesorería de la SEMOVI en la fecha y hora agendadas.",
+        "descripcionLarga": "El usuario acude presencialmente al módulo de atención de la SEMOVI en la fecha y hora de su cita con todos los documentos requeridos. El personal del módulo registra la llegada, verifica el folio de cita y asigna turno de atención.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-2"],
+          "siguientes": ["paso-4"]
+        }
+      },
+      {
+        "id": "paso-4",
+        "orden": 4,
+        "titulo": "Presentar identificación oficial primaria",
+        "descripcionCorta": "El usuario entrega una identificación oficial vigente con fotografía.",
+        "descripcionLarga": "El módulo de tesorería solicita una identificación oficial con fotografía. Se acepta INE/IFE vigente, cartilla del servicio militar nacional o pasaporte mexicano vigente. Se requiere original y copia. Es suficiente con presentar al menos uno de los documentos listados.",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "INE",             "obligatorio": false },
+          { "tipoDocumento": "CARTILLA_MILITAR","obligatorio": false },
+          { "tipoDocumento": "PASAPORTE",       "obligatorio": false }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-3"],
+          "siguientes": ["paso-5"]
+        }
+      },
+      {
+        "id": "paso-5",
+        "orden": 5,
+        "titulo": "Presentar comprobante de domicilio",
+        "descripcionCorta": "El usuario entrega un comprobante de domicilio vigente no mayor a 3 meses.",
+        "descripcionLarga": "El módulo solicita un comprobante de domicilio con antigüedad no mayor a 3 meses. Se acepta recibo de luz, agua, gas, teléfono fijo o estado de cuenta bancario. El domicilio debe corresponder a la Ciudad de México para tramitar la licencia en un módulo de la CDMX. Si no existe UserDocumento(COMPROBANTE_DOMICILIO), se ejecuta automáticamente el sub-trámite 'Registro de Comprobante de Domicilio' antes de continuar.",
+        "activo": true,
+        "condicion": "si UserDocumento(COMPROBANTE_DOMICILIO) no existe → ejecutar sub-trámite 'Registro de Comprobante de Domicilio' AND domicilio.estado = 'CDMX'",
+        "documentosRequeridos": [
+          { "tipoDocumento": "COMPROBANTE_DOMICILIO", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-4"],
+          "siguientes": ["paso-6"]
+        }
+      },
+      {
+        "id": "paso-6",
+        "orden": 6,
+        "titulo": "Pago de derechos",
+        "descripcionCorta": "El usuario realiza el pago de derechos usando la línea de captura generada en el paso 1.",
+        "descripcionLarga": "El usuario realiza el pago del trámite de licencia tipo A utilizando la línea de captura obtenida en el paso 1. El pago puede realizarse en bancos autorizados, tiendas de conveniencia o en los cajeros del propio módulo. Se debe conservar el comprobante de pago original para presentarlo al personal del módulo. Sin comprobante de pago validado no se continúa con el trámite.",
+        "activo": true,
+        "documentosRequeridos": [],
+        "dependencias": {
+          "anteriores": ["paso-5"],
+          "siguientes": ["paso-7"]
+        }
+      },
+      {
+        "id": "paso-7",
+        "orden": 7,
+        "titulo": "Captura de datos biométricos y entrega de licencia",
+        "descripcionCorta": "El personal del módulo toma fotografía, firma y huellas digitales del usuario y entrega la licencia plástica tipo A.",
+        "descripcionLarga": "El personal del módulo realiza la captura biométrica del solicitante: fotografía de frente, firma digitalizada y huellas dactilares. El usuario revisa y confirma que sus datos personales sean correctos. La licencia de conducir tipo A (automovilista) se imprime y entrega en formato plástico en el mismo acto. Al recibirla se registra UserDocumento(LICENCIA_VEHICULAR_PLACA).",
+        "activo": true,
+        "documentosRequeridos": [
+          { "tipoDocumento": "LICENCIA_VEHICULAR_PLACA", "obligatorio": true }
+        ],
+        "dependencias": {
+          "anteriores": ["paso-6"],
+          "siguientes": []
+        }
+      }
+    ]
+  }
+}

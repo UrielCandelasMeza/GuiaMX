@@ -1,0 +1,31 @@
+{
+  "tramite": {
+    "nombre": "Registro de Identificación Secundaria",
+    "descripcion": "Trámite para registrar un documento de identificación secundaria en el sistema (credencial de empleado, credencial de estudiante, licencia de conducir, etc.). Solo se registra la existencia del documento; el archivo nunca se almacena.",
+    "monto": 0,
+    "activo": true,
+
+    "documentosPrevios": [],
+
+    "pasos": [
+      {
+        "id": "paso-1",
+        "orden": 1,
+        "titulo": "Adjuntar documento de identificación secundaria",
+        "descripcionCorta": "Sube una imagen o PDF de tu identificación secundaria.",
+        "descripcionLarga": "Adjunta un archivo JPG, PNG o PDF de tu documento de identificación secundaria (credencial de empleado, credencial de estudiante, licencia de conducir, tarjeta INAPAM, etc.). El archivo debe cumplir con los siguientes requisitos: (1) Formato JPG, PNG o PDF. (2) Tamaño máximo de 10 MB. (3) El documento debe ser legible en su totalidad, sin partes cortadas, borrosas u oscurecidas. (4) Si el documento cuenta con firma digital o física de validación, esta debe ser visible en el archivo adjunto.",
+        "activo": true,
+        "documentosRequeridos": [
+          {
+            "id": "paso-1",,
+            "tipoDocumento": "IDENTIFICACION_SECUNDARIA",
+            "obligatorio": true
+          }
+        ],
+        "dependeDe": []
+      }
+    ],
+
+    "dependencias": []
+  }
+}

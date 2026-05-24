@@ -1,0 +1,34 @@
+{
+  "tramite": {
+    "id": "fbe36c9f-7372-4704-8ab1-f06f1086214c",
+    "nombre": "Registro de Certificación Académica",
+    "descripcion": "Trámite para registrar un documento de certificación académica (título, cédula profesional, certificado de estudios, etc.) en el sistema. Solo se registra la existencia del documento; el archivo nunca se almacena.",
+    "monto": 0,
+    "activo": true,
+
+    "documentosPrevios": [],
+
+    "pasos": [
+      {
+        "id": "a7d6caea-0473-46ea-b144-a1c721919b15",
+        "tramiteId": "fbe36c9f-7372-4704-8ab1-f06f1086214c",
+        "orden": 1,
+        "titulo": "Adjuntar documento de certificación académica",
+        "descripcionCorta": "Sube una imagen o PDF de tu certificación académica.",
+        "descripcionLarga": "Adjunta un archivo JPG, PNG o PDF de tu documento de certificación académica (título universitario, cédula profesional, certificado de estudios, etc.). El archivo debe cumplir con los siguientes requisitos: (1) Formato JPG, PNG o PDF. (2) Tamaño máximo de 10 MB. (3) El documento debe ser legible en su totalidad, sin partes cortadas, borrosas u oscurecidas. (4) Si el documento cuenta con firma digital o física de validación, esta debe ser visible en el archivo adjunto.",
+        "activo": true,
+        "documentosRequeridos": [
+          {
+            "id": "a0a81825-c4d1-4c19-b9ef-58d181e2f51d",
+            "pasoId": "a7d6caea-0473-46ea-b144-a1c721919b15",
+            "tipoDocumento": "CERTIFICACION_ACADEMICA",
+            "obligatorio": true
+          }
+        ],
+        "dependeDe": []
+      }
+    ],
+
+    "dependencias": []
+  }
+}

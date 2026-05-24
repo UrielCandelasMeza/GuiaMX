@@ -1,0 +1,32 @@
+{
+  "tramite": {
+    "nombre": "Registro de Cartilla Militar Digital",
+    "descripcion": "Trámite para registrar la cartilla del servicio militar nacional en formato digital. Se acepta el documento en formato JPG, PNG o PDF con vigencia vigente.",
+    "monto": 0.00,
+    "activo": true,
+
+    "documentosPrevios": [],
+
+    "pasos": [
+      {
+        "id": "paso-1",
+        "orden": 1,
+        "titulo": "Carga de la cartilla militar digital",
+        "descripcionCorta": "El usuario adjunta su cartilla militar en formato JPG, PNG o PDF.",
+        "descripcionLarga": "El usuario sube un archivo de su cartilla del servicio militar nacional. El archivo debe cumplir tres condiciones: (1) formato JPG, PNG o PDF, (2) tamaño máximo de 5 MB, (3) documento vigente y legible con número de cartilla visible. Si alguna condición no se cumple, el sistema notifica al usuario y solicita un nuevo archivo.",
+        "activo": true,
+        "condicion": "archivo.formato IN ['jpg','jpeg','png','pdf'] AND archivo.tamanio <= 5MB AND cartilla.vigente = true AND cartilla.numeroVisible = true",
+        "documentosRequeridos": [
+          {
+            "tipoDocumento": "CARTILLA_MILITAR",
+            "obligatorio": true
+          }
+        ],
+        "dependencias": {
+          "anteriores": [],
+          "siguientes": []
+        }
+      }
+    ]
+  }
+}
