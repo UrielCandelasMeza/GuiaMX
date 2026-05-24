@@ -9,7 +9,8 @@ export const register = async (req: Request, res: Response) => {
 
     if (!nombre || !apellidos || !correo || !password) {
       return res.status(400).json({
-        error: "Todos los campos son obligatorios: nombre, apellidos, correo y password",
+        error:
+          "Todos los campos son obligatorios: nombre, apellidos, correo y password",
       });
     }
 
@@ -55,7 +56,9 @@ export const login = async (req: Request, res: Response) => {
     const { correo, password } = req.body;
 
     if (!correo || !password) {
-      return res.status(400).json({ error: "Correo y password son obligatorios" });
+      return res
+        .status(400)
+        .json({ error: "Correo y password son obligatorios" });
     }
 
     const user = await prisma.user.findUnique({
