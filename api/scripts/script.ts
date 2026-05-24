@@ -17,8 +17,9 @@
  * ─────────────────────────────────────────────────────────────
  */
 
-import { prisma, prisma } from '../src/lib/prisma';
-import {type TipoDocumentoEnum} from '../generated/prisma/enums'
+import { prisma } from "../src/lib/prisma";
+import { PrismaClient } from "../generated/prisma/client";
+import { type TipoDocumentoEnum } from "../generated/prisma/enums";
 import { readFileSync } from "fs";
 import { resolve } from "path";
 
@@ -41,17 +42,17 @@ interface JsonDocumentoRequerido {
  * (los "id" string definidos en el propio JSON, no UUIDs de DB).
  */
 interface JsonPaso {
-  id: string;               // ID local del JSON, ej: "paso-1"
+  id: string; // ID local del JSON, ej: "paso-1"
   orden: number;
   titulo: string;
   descripcionCorta: string;
   descripcionLarga?: string;
   activo?: boolean;
-  condicion?: string;       // Campo informativo, se guarda en descripcionLarga
+  condicion?: string; // Campo informativo, se guarda en descripcionLarga
   documentosRequeridos?: JsonDocumentoRequerido[];
   dependencias?: {
-    anteriores?: string[];  // IDs locales de pasos anteriores
-    siguientes?: string[];  // IDs locales de pasos siguientes
+    anteriores?: string[]; // IDs locales de pasos anteriores
+    siguientes?: string[]; // IDs locales de pasos siguientes
   };
   // Campos adicionales del JSON que se ignoran (salidaDocumento, campos, etc.)
   [key: string]: unknown;
@@ -62,7 +63,7 @@ interface JsonPaso {
  */
 interface JsonTramite {
   tramite: {
-    id?: string;            // ID local opcional, no se usa como PK en DB
+    id?: string; // ID local opcional, no se usa como PK en DB
     nombre: string;
     descripcion: string;
     monto?: number;
@@ -77,10 +78,22 @@ interface JsonTramite {
 // ─── Validación del enum TipoDocumentoEnum ────────────────────────────────────
 
 const TIPOS_DOCUMENTO_VALIDOS = new Set<string>([
-  "CURP", "LLAVE_MX", "ACTA_NACIMIENTO", "EFIRMA", "INE", "PASAPORTE",
-  "CARTILLA_MILITAR", "COMPROBANTE_DOMICILIO", "LLAVE_CDMX", "CORREO_PERSONAL",
-  "CERTIFICACION_ACADEMICA", "NUMERO_TELEFONO", "NSS", "RFC",
-  "LICENCIA_VEHICULAR_PLACA", "IDENTIFICACION_SECUNDARIA",
+  "CURP",
+  "LLAVE_MX",
+  "ACTA_NACIMIENTO",
+  "EFIRMA",
+  "INE",
+  "PASAPORTE",
+  "CARTILLA_MILITAR",
+  "COMPROBANTE_DOMICILIO",
+  "LLAVE_CDMX",
+  "CORREO_PERSONAL",
+  "CERTIFICACION_ACADEMICA",
+  "NUMERO_TELEFONO",
+  "NSS",
+  "RFC",
+  "LICENCIA_VEHICULAR_PLACA",
+  "IDENTIFICACION_SECUNDARIA",
 ]);
 
 function esTipoDocumentoValido(tipo: string): tipo is TipoDocumentoEnum {
@@ -102,13 +115,19 @@ function validarJsonTramite(raw: unknown): {
   const errores: ErrorValidacion[] = [];
 
   if (typeof raw !== "object" || raw === null) {
-    return { valido: false, errores: [{ campo: "root", mensaje: "El JSON debe ser un objeto" }] };
+    return {
+      valido: false,
+      errores: [{ campo: "root", mensaje: "El JSON debe ser un objeto" }],
+    };
   }
 
   const obj = raw as Record<string, unknown>;
 
   if (!obj.tramite || typeof obj.tramite !== "object") {
-    errores.push({ campo: "tramite", mensaje: "Campo 'tramite' requerido y debe ser un objeto" });
+    errores.push({
+      campo: "tramite",
+      mensaje: "Campo 'tramite' requerido y debe ser un objeto",
+    });
     return { valido: false, errores };
   }
 
@@ -116,25 +135,40 @@ function validarJsonTramite(raw: unknown): {
 
   // Validar campos obligatorios del trámite
   if (!t.nombre || typeof t.nombre !== "string") {
-    errores.push({ campo: "tramite.nombre", mensaje: "Campo 'nombre' requerido (string)" });
+    errores.push({
+      campo: "tramite.nombre",
+      mensaje: "Campo 'nombre' requerido (string)",
+    });
   }
   if (!t.descripcion || typeof t.descripcion !== "string") {
-    errores.push({ campo: "tramite.descripcion", mensaje: "Campo 'descripcion' requerido (string)" });
+    errores.push({
+      campo: "tramite.descripcion",
+      mensaje: "Campo 'descripcion' requerido (string)",
+    });
   }
   if (!Array.isArray(t.pasos) || t.pasos.length === 0) {
-    errores.push({ campo: "tramite.pasos", mensaje: "Se requiere al menos un paso en el array 'pasos'" });
+    errores.push({
+      campo: "tramite.pasos",
+      mensaje: "Se requiere al menos un paso en el array 'pasos'",
+    });
     return { valido: false, errores };
   }
 
   // Validar documentosPrevios
   if (t.documentosPrevios !== undefined) {
     if (!Array.isArray(t.documentosPrevios)) {
-      errores.push({ campo: "tramite.documentosPrevios", mensaje: "Debe ser un array" });
+      errores.push({
+        campo: "tramite.documentosPrevios",
+        mensaje: "Debe ser un array",
+      });
     } else {
       (t.documentosPrevios as unknown[]).forEach((d, i) => {
         const doc = d as Record<string, unknown>;
         if (!doc.tipoDocumento || typeof doc.tipoDocumento !== "string") {
-          errores.push({ campo: `tramite.documentosPrevios[${i}].tipoDocumento`, mensaje: "Requerido (string)" });
+          errores.push({
+            campo: `tramite.documentosPrevios[${i}].tipoDocumento`,
+            mensaje: "Requerido (string)",
+          });
         } else if (!esTipoDocumentoValido(doc.tipoDocumento)) {
           errores.push({
             campo: `tramite.documentosPrevios[${i}].tipoDocumento`,
@@ -156,7 +190,10 @@ function validarJsonTramite(raw: unknown): {
       errores.push({ campo: `${prefix}.id`, mensaje: "Requerido (string)" });
     } else {
       if (idsLocales.has(paso.id)) {
-        errores.push({ campo: `${prefix}.id`, mensaje: `ID local duplicado: '${paso.id}'` });
+        errores.push({
+          campo: `${prefix}.id`,
+          mensaje: `ID local duplicado: '${paso.id}'`,
+        });
       }
       idsLocales.add(paso.id as string);
     }
@@ -165,21 +202,33 @@ function validarJsonTramite(raw: unknown): {
       errores.push({ campo: `${prefix}.orden`, mensaje: "Requerido (number)" });
     }
     if (!paso.titulo || typeof paso.titulo !== "string") {
-      errores.push({ campo: `${prefix}.titulo`, mensaje: "Requerido (string)" });
+      errores.push({
+        campo: `${prefix}.titulo`,
+        mensaje: "Requerido (string)",
+      });
     }
     if (!paso.descripcionCorta || typeof paso.descripcionCorta !== "string") {
-      errores.push({ campo: `${prefix}.descripcionCorta`, mensaje: "Requerido (string)" });
+      errores.push({
+        campo: `${prefix}.descripcionCorta`,
+        mensaje: "Requerido (string)",
+      });
     }
 
     // Validar documentosRequeridos del paso
     if (paso.documentosRequeridos !== undefined) {
       if (!Array.isArray(paso.documentosRequeridos)) {
-        errores.push({ campo: `${prefix}.documentosRequeridos`, mensaje: "Debe ser un array" });
+        errores.push({
+          campo: `${prefix}.documentosRequeridos`,
+          mensaje: "Debe ser un array",
+        });
       } else {
         (paso.documentosRequeridos as unknown[]).forEach((d, j) => {
           const doc = d as Record<string, unknown>;
           if (!doc.tipoDocumento || typeof doc.tipoDocumento !== "string") {
-            errores.push({ campo: `${prefix}.documentosRequeridos[${j}].tipoDocumento`, mensaje: "Requerido" });
+            errores.push({
+              campo: `${prefix}.documentosRequeridos[${j}].tipoDocumento`,
+              mensaje: "Requerido",
+            });
           } else if (!esTipoDocumentoValido(doc.tipoDocumento)) {
             errores.push({
               campo: `${prefix}.documentosRequeridos[${j}].tipoDocumento`,
@@ -201,11 +250,17 @@ function validarJsonTramite(raw: unknown): {
       for (const dir of ["anteriores", "siguientes"] as const) {
         if (dep[dir] !== undefined) {
           if (!Array.isArray(dep[dir])) {
-            errores.push({ campo: `${prefix}.${dir}`, mensaje: "Debe ser un array de strings" });
+            errores.push({
+              campo: `${prefix}.${dir}`,
+              mensaje: "Debe ser un array de strings",
+            });
           } else {
             (dep[dir] as unknown[]).forEach((id, j) => {
               if (typeof id !== "string") {
-                errores.push({ campo: `${prefix}.${dir}[${j}]`, mensaje: "Debe ser un string" });
+                errores.push({
+                  campo: `${prefix}.${dir}[${j}]`,
+                  mensaje: "Debe ser un string",
+                });
               } else if (!idsLocales.has(id)) {
                 errores.push({
                   campo: `${prefix}.${dir}[${j}]`,
@@ -229,7 +284,7 @@ function validarJsonTramite(raw: unknown): {
 async function ingestarTramite(
   prisma: PrismaClient,
   datos: JsonTramite,
-  opciones: { upsert: boolean; dryRun: boolean }
+  opciones: { upsert: boolean; dryRun: boolean },
 ): Promise<void> {
   const { tramite: t } = datos;
   const { upsert, dryRun } = opciones;
@@ -249,7 +304,9 @@ async function ingestarTramite(
   console.log("\n📋 Plan de ingesta:");
   console.log(`   Trámite        : ${t.nombre}`);
   console.log(`   Pasos          : ${t.pasos.length}`);
-  console.log(`   Tipos docs     : ${[...tiposNecesarios].join(", ") || "ninguno"}`);
+  console.log(
+    `   Tipos docs     : ${[...tiposNecesarios].join(", ") || "ninguno"}`,
+  );
   console.log(`   Docs previos   : ${t.documentosPrevios?.length ?? 0}`);
   console.log(`   Modo           : ${upsert ? "upsert" : "insert"}`);
   if (dryRun) {
@@ -259,7 +316,6 @@ async function ingestarTramite(
 
   // Todo en una sola transacción interactiva
   await prisma.$transaction(async (tx) => {
-
     // ── 1. Upsert de TipoDocumento ──────────────────────────────────────────
     console.log("\n[1/5] Sincronizando tipos de documento...");
 
@@ -267,11 +323,11 @@ async function ingestarTramite(
 
     for (const tipo of tiposNecesarios) {
       const td = await tx.tipoDocumento.upsert({
-        where:  { tipo: tipo as TipoDocumentoEnum },
+        where: { tipo: tipo as TipoDocumentoEnum },
         update: {}, // Si ya existe, no se toca
         create: {
-          tipo:        tipo as TipoDocumentoEnum,
-          nombre:      tipo.replace(/_/g, " "),
+          tipo: tipo as TipoDocumentoEnum,
+          nombre: tipo.replace(/_/g, " "),
           descripcion: `Documento de tipo ${tipo}`,
           obligatorio: false,
         },
@@ -287,34 +343,36 @@ async function ingestarTramite(
 
     if (upsert) {
       tramiteDb = await tx.tramite.upsert({
-        where:  { nombre: t.nombre } as never, // nombre no es @unique en schema; ver nota abajo
+        where: { nombre: t.nombre } as never, // nombre no es @unique en schema; ver nota abajo
         update: {
           descripcion: t.descripcion,
-          monto:       t.monto ?? 0,
-          activo:      t.activo ?? true,
+          monto: t.monto ?? 0,
+          activo: t.activo ?? true,
         },
         create: {
-          nombre:      t.nombre,
+          nombre: t.nombre,
           descripcion: t.descripcion,
-          monto:       t.monto ?? 0,
-          activo:      t.activo ?? true,
+          monto: t.monto ?? 0,
+          activo: t.activo ?? true,
         },
       });
     } else {
       // Verificar si ya existe para dar un error claro
-      const existente = await tx.tramite.findFirst({ where: { nombre: t.nombre } });
+      const existente = await tx.tramite.findFirst({
+        where: { nombre: t.nombre },
+      });
       if (existente) {
         throw new Error(
           `El trámite '${t.nombre}' ya existe (id: ${existente.id}). ` +
-          `Usa el flag --upsert para actualizarlo.`
+            `Usa el flag --upsert para actualizarlo.`,
         );
       }
       tramiteDb = await tx.tramite.create({
         data: {
-          nombre:      t.nombre,
+          nombre: t.nombre,
           descripcion: t.descripcion,
-          monto:       t.monto ?? 0,
-          activo:      t.activo ?? true,
+          monto: t.monto ?? 0,
+          activo: t.activo ?? true,
         },
       });
     }
@@ -326,19 +384,23 @@ async function ingestarTramite(
 
     if (upsert) {
       // En upsert, limpiar los previos antes de re-crear
-      await tx.tramiteDocumento.deleteMany({ where: { tramiteId: tramiteDb.id } });
+      await tx.tramiteDocumento.deleteMany({
+        where: { tramiteId: tramiteDb.id },
+      });
     }
 
     for (const doc of t.documentosPrevios ?? []) {
       const tipoId = tipoDocumentoMap.get(doc.tipoDocumento)!;
       await tx.tramiteDocumento.create({
         data: {
-          tramiteId:       tramiteDb.id,
+          tramiteId: tramiteDb.id,
           tipoDocumentoId: tipoId,
-          obligatorio:     doc.obligatorio ?? true,
+          obligatorio: doc.obligatorio ?? true,
         },
       });
-      console.log(`   ✓ Doc previo: ${doc.tipoDocumento} (obligatorio: ${doc.obligatorio ?? true})`);
+      console.log(
+        `   ✓ Doc previo: ${doc.tipoDocumento} (obligatorio: ${doc.obligatorio ?? true})`,
+      );
     }
 
     // ── 4. Pasos (primera pasada: crear registros sin dependencias) ─────────
@@ -356,17 +418,19 @@ async function ingestarTramite(
       // Si el paso tiene condición, se añade al final de descripcionLarga
       let descLarga = paso.descripcionLarga ?? "";
       if (paso.condicion) {
-        descLarga += descLarga ? `\n\nCondición de activación: ${paso.condicion}` : `Condición de activación: ${paso.condicion}`;
+        descLarga += descLarga
+          ? `\n\nCondición de activación: ${paso.condicion}`
+          : `Condición de activación: ${paso.condicion}`;
       }
 
       const pasoDb = await tx.paso.create({
         data: {
-          tramiteId:        tramiteDb.id,
-          orden:            paso.orden,
-          titulo:           paso.titulo,
+          tramiteId: tramiteDb.id,
+          orden: paso.orden,
+          titulo: paso.titulo,
           descripcionCorta: paso.descripcionCorta,
           descripcionLarga: descLarga || null,
-          activo:           paso.activo ?? true,
+          activo: paso.activo ?? true,
         },
       });
 
@@ -379,9 +443,9 @@ async function ingestarTramite(
         const tipoId = tipoDocumentoMap.get(doc.tipoDocumento)!;
         await tx.pasoDocumento.create({
           data: {
-            pasoId:          pasoDb.id,
+            pasoId: pasoDb.id,
             tipoDocumentoId: tipoId,
-            obligatorio:     doc.obligatorio ?? true,
+            obligatorio: doc.obligatorio ?? true,
           },
         });
         console.log(`     └─ Doc requerido: ${doc.tipoDocumento}`);
@@ -432,7 +496,7 @@ async function ingestarTramite(
     console.log(`   ID en DB : ${tramiteDb.id}`);
     console.log(`   Pasos    : ${pasoIdMap.size}`);
     console.log(`   Deps     : ${dependenciasInsertadas.size}`);
-  });
+  }, { maxWait: 20000, timeout: 60000 });
 }
 
 // ─── CLI ─────────────────────────────────────────────────────────────────────
@@ -453,8 +517,8 @@ Opciones:
   }
 
   const jsonPath = args.find((a) => !a.startsWith("--"));
-  const dryRun   = args.includes("--dry-run");
-  const upsert   = args.includes("--upsert");
+  const dryRun = args.includes("--dry-run");
+  const upsert = args.includes("--upsert");
 
   if (!jsonPath) {
     console.error("❌ Debes proporcionar la ruta al archivo JSON.");
@@ -467,7 +531,9 @@ Opciones:
     const contenido = readFileSync(resolve(jsonPath), "utf-8");
     raw = JSON.parse(contenido);
   } catch (err) {
-    console.error(`❌ No se pudo leer o parsear el archivo: ${(err as Error).message}`);
+    console.error(
+      `❌ No se pudo leer o parsear el archivo: ${(err as Error).message}`,
+    );
     process.exit(1);
   }
 

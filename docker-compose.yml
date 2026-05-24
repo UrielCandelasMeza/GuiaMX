@@ -28,7 +28,7 @@ services:
     volumes:
       - ./api:/app:z
       - /app/node_modules
-    command: sh -c "bunx --bun prisma migrate dev --name init && bunx --bun prisma generate && bun run dev"
+    command: sh -c "bunx --bun prisma migrate dev --name init && bunx --bun prisma generate && bun run scripts/seed-all.ts && bun run dev"
     depends_on:
       - db
 

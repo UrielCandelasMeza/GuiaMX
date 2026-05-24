@@ -58,13 +58,14 @@ export function useTramite(id: string | null | undefined) {
 /* ── useDocumentos ───────────────────────────────────────────────────────── */
 export interface UserDocumento {
   id: string;
-  tipoDocumentoId: string;
-  nombre?: string;
+  tipo: string;
+  nombre: string;
+  tieneDocumento: boolean;
 }
 
 /**
- * Documentos registrados del usuario autenticado.
- * Obtiene el token desde useSession() internamente.
+ * Documentos del catálogo con flag tieneDocumento del usuario autenticado.
+ * GET /documentos — requiere token
  */
 export function useDocumentos() {
   const { data: session, status } = useSession();
@@ -73,7 +74,7 @@ export function useDocumentos() {
 
   const key: [string, string] | null =
     status === "authenticated" && token
-      ? ["/usuarios/me/documentos", token]
+      ? ["/documentos", token]
       : null;
 
   const { data, error, isLoading, mutate } = useSWR<UserDocumento[]>(
@@ -89,3 +90,4 @@ export function useDocumentos() {
     mutate,
   };
 }
+

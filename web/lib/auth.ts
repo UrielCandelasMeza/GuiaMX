@@ -9,6 +9,7 @@ declare module "next-auth" {
     nombre?: string;
     apellidos?: string;
     token?: string;
+    sessionId?: string;
   }
   interface Session {
     user: {
@@ -17,6 +18,7 @@ declare module "next-auth" {
       apellidos: string;
       correo: string;
       apiToken: string;
+      sessionId: string;
     };
   }
   interface JWT {
@@ -24,6 +26,7 @@ declare module "next-auth" {
     nombre?: string;
     apellidos?: string;
     correo?: string;
+    sessionId?: string;
   }
 }
 
@@ -53,10 +56,10 @@ export const authConfig: NextAuthConfig = {
         }
 
         try {
+          const apiUrl =
+            process.env.INTERNAL_API_URL ?? process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
           console.log("[AUTH] Intentando login con:", parsed.data.correo);
-          const res = await fetch(
-            `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
-            {
+          const res = await fetch(`${apiUrl}/auth/login`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
@@ -80,6 +83,7 @@ export const authConfig: NextAuthConfig = {
             apellidos: string;
             correo: string;
             token: string;
+            sessionId?: string;
           };
 
           console.log("[AUTH] Login exitoso para:", data.correo);
@@ -89,6 +93,7 @@ export const authConfig: NextAuthConfig = {
             apellidos: data.apellidos,
             email: data.correo,
             token: data.token,
+            sessionId: data.sessionId ?? "",
           };
         } catch (error) {
           console.error("[AUTH] Error en authorize:", error);
@@ -118,6 +123,7 @@ export const authConfig: NextAuthConfig = {
         t.nombre = user.nombre;
         t.apellidos = user.apellidos;
         t.correo = user.email ?? "";
+        t.sessionId = user.sessionId ?? "";
       }
       return token;
     },
@@ -134,6 +140,7 @@ export const authConfig: NextAuthConfig = {
         apellidos: (t.apellidos as string) ?? "",
         correo: (t.correo as string) ?? "",
         apiToken: (t.apiToken as string) ?? "",
+        sessionId: (t.sessionId as string) ?? "",
       };
       return session;
     },

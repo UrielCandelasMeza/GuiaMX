@@ -23,102 +23,103 @@ interface DocumentoInfo {
   nombre: string;
 }
 
+// tipoId coincide exactamente con TipoDocumentoEnum del backend
 const GRUPOS: { categoria: string; docs: DocumentoInfo[] }[] = [
   {
     categoria: "Identificación oficial",
     docs: [
-      { tipoId: "curp", nombre: "CURP" },
-      { tipoId: "ine", nombre: "INE" },
-      { tipoId: "pasaporte", nombre: "Pasaporte" },
-      { tipoId: "cartilla_militar", nombre: "Cartilla militar" },
+      { tipoId: "CURP", nombre: "CURP" },
+      { tipoId: "INE", nombre: "INE" },
+      { tipoId: "PASAPORTE", nombre: "Pasaporte" },
+      { tipoId: "CARTILLA_MILITAR", nombre: "Cartilla militar" },
     ],
   },
   {
     categoria: "Fiscal y laboral",
     docs: [
-      { tipoId: "rfc", nombre: "RFC" },
-      { tipoId: "nss", nombre: "NSS" },
-      { tipoId: "efirma", nombre: "EFirma" },
+      { tipoId: "RFC", nombre: "RFC" },
+      { tipoId: "NSS", nombre: "NSS" },
+      { tipoId: "EFIRMA", nombre: "EFirma" },
     ],
   },
   {
     categoria: "Registro civil",
-    docs: [{ tipoId: "acta_nacimiento", nombre: "Acta de nacimiento" }],
+    docs: [{ tipoId: "ACTA_NACIMIENTO", nombre: "Acta de nacimiento" }],
   },
   {
     categoria: "Digital CDMX",
     docs: [
-      { tipoId: "llave_mx", nombre: "LLAVE MX" },
-      { tipoId: "llave_cdmx", nombre: "LLAVE CDMX" },
+      { tipoId: "LLAVE_MX", nombre: "LLAVE MX" },
+      { tipoId: "LLAVE_CDMX", nombre: "LLAVE CDMX" },
     ],
   },
   {
     categoria: "Contacto",
     docs: [
-      { tipoId: "correo_personal", nombre: "Correo personal" },
-      { tipoId: "telefono", nombre: "Número de teléfono" },
+      { tipoId: "CORREO_PERSONAL", nombre: "Correo personal" },
+      { tipoId: "NUMERO_TELEFONO", nombre: "Número de teléfono" },
     ],
   },
   {
     categoria: "Profesional",
-    docs: [{ tipoId: "cedula_profesional", nombre: "Cédula profesional" }],
+    docs: [{ tipoId: "CERTIFICACION_ACADEMICA", nombre: "Cédula profesional" }],
   },
   {
     categoria: "Vehicular",
-    docs: [
-      { tipoId: "licencia_vehicular", nombre: "Licencia vehicular y placa" },
-    ],
+    docs: [{ tipoId: "LICENCIA_VEHICULAR_PLACA", nombre: "Licencia vehicular y placa" }],
   },
   {
     categoria: "Domicilio",
-    docs: [
-      { tipoId: "comprobante_domicilio", nombre: "Comprobante de domicilio" },
-    ],
+    docs: [{ tipoId: "COMPROBANTE_DOMICILIO", nombre: "Comprobante de domicilio" }],
   },
   {
     categoria: "Otros",
-    docs: [{ tipoId: "id_secundaria", nombre: "Identificación secundaria" }],
+    docs: [{ tipoId: "IDENTIFICACION_SECUNDARIA", nombre: "Identificación secundaria" }],
   },
 ];
 
 const TOTAL_DOCS = GRUPOS.reduce((acc, g) => acc + g.docs.length, 0); // 16
 
 /* ── Tipos de la respuesta del API ──────────────────────────────────────── */
-interface UserDocumento {
-  id: string;
-  tipoDocumentoId: string;
+// GET /documentos → [{ id, tipo, nombre, tieneDocumento }]
+interface ApiDocumento {
+  id: string;           // ID del TipoDocumento en BD
+  tipo: string;         // Coincide con TipoDocumentoEnum
+  nombre: string;
+  tieneDocumento: boolean;
 }
 
 /* ── Hook de estado de documentos ───────────────────────────────────────── */
 function useDocumentos(token: string) {
-  /** Mapa tipoId → id del registro en el API (null = no registrado) */
+  /**
+   * Mapa tipo (CURP, INE…) → tipoDocumentoId en BD (null = no registrado)
+   * La API usa tipoDocumentoId para el toggle, no un id de userDocumento
+   */
   const [registrados, setRegistrados] = useState<Map<string, string | null>>(
     new Map(),
   );
   const [cargando, setCargando] = useState(true);
 
-  /* Carga inicial */
+  /* Carga inicial: GET /documentos */
   useEffect(() => {
     let cancelled = false;
     async function load() {
       setCargando(true);
       try {
-        const res = await fetch(`${API_URL}/usuarios/me/documentos`, {
+        const res = await fetch(`${API_URL}/documentos`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (!res.ok) throw new Error();
-        const data = (await res.json()) as UserDocumento[];
+        const data = (await res.json()) as ApiDocumento[];
         if (!cancelled) {
-          const mapa = new Map<string, string | null>(
-            GRUPOS.flatMap((g) => g.docs.map((d) => [d.tipoId, null])),
-          );
+          // Mapa: tipo → id (del TipoDocumento) si tieneDocumento, null si no
+          const mapa = new Map<string, string | null>();
           for (const doc of data) {
-            mapa.set(doc.tipoDocumentoId, doc.id);
+            mapa.set(doc.tipo, doc.tieneDocumento ? doc.id : null);
           }
           setRegistrados(mapa);
         }
       } catch {
-        // Sin API disponible — iniciamos con todo vacío
         if (!cancelled) {
           setRegistrados(
             new Map(GRUPOS.flatMap((g) => g.docs.map((d) => [d.tipoId, null]))),
@@ -129,78 +130,53 @@ function useDocumentos(token: string) {
       }
     }
     load();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [token]);
 
-  /* Toggle: agrega o elimina un documento */
+  /**
+   * Toggle: llama a POST /documentos/toggle/:tipoDocumentoId
+   * El backend decide si crear o eliminar el registro.
+   */
   const toggle = useCallback(
     async (tipoId: string, nombre: string) => {
-      const existingId = registrados.get(tipoId) ?? null;
+      const bdId = registrados.get(tipoId);
+      if (!bdId) return; // No tenemos el id de BD todavía (cargando)
 
-      if (existingId) {
-        /* ── OFF: eliminar ── */
-        // Optimistic
+      const yaActivo = registrados.get(tipoId) !== null;
+
+      // Optimistic update
+      setRegistrados((prev) => {
+        const m = new Map(prev);
+        m.set(tipoId, yaActivo ? null : bdId);
+        return m;
+      });
+
+      try {
+        const res = await fetch(`${API_URL}/documentos/toggle/${bdId}`, {
+          method: "POST",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        if (!res.ok) throw new Error();
+        const result = (await res.json()) as { tieneDocumento: boolean };
+        // Sincronizar con la respuesta real
         setRegistrados((prev) => {
           const m = new Map(prev);
-          m.set(tipoId, null);
+          m.set(tipoId, result.tieneDocumento ? bdId : null);
           return m;
         });
-        try {
-          const res = await fetch(
-            `${API_URL}/usuarios/me/documentos/${existingId}`,
-            {
-              method: "DELETE",
-              headers: { Authorization: `Bearer ${token}` },
-            },
-          );
-          if (!res.ok) throw new Error();
-          toast.success(`"${nombre}" eliminado de tu perfil.`);
-        } catch {
-          // Revertir si falla
-          setRegistrados((prev) => {
-            const m = new Map(prev);
-            m.set(tipoId, existingId);
-            return m;
-          });
-          toast.error(`No se pudo eliminar "${nombre}". Inténtalo de nuevo.`);
-        }
-      } else {
-        /* ── ON: agregar ── */
-        // Optimistic con id temporal
-        const tempId = `temp-${tipoId}`;
+        toast.success(
+          result.tieneDocumento
+            ? `"${nombre}" agregado a tu perfil.`
+            : `"${nombre}" eliminado de tu perfil.`,
+        );
+      } catch {
+        // Revertir al estado anterior
         setRegistrados((prev) => {
           const m = new Map(prev);
-          m.set(tipoId, tempId);
+          m.set(tipoId, yaActivo ? bdId : null);
           return m;
         });
-        try {
-          const res = await fetch(`${API_URL}/usuarios/me/documentos`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-            body: JSON.stringify({ tipoDocumentoId: tipoId }),
-          });
-          if (!res.ok) throw new Error();
-          const created = (await res.json()) as UserDocumento;
-          setRegistrados((prev) => {
-            const m = new Map(prev);
-            m.set(tipoId, created.id);
-            return m;
-          });
-          toast.success(`"${nombre}" agregado a tu perfil.`);
-        } catch {
-          // Revertir
-          setRegistrados((prev) => {
-            const m = new Map(prev);
-            m.set(tipoId, null);
-            return m;
-          });
-          toast.error(`No se pudo agregar "${nombre}". Inténtalo de nuevo.`);
-        }
+        toast.error(`No se pudo actualizar "${nombre}". Inténtalo de nuevo.`);
       }
     },
     [token, registrados],

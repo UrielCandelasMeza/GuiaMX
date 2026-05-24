@@ -84,6 +84,15 @@ export const login = async (req: Request, res: Response) => {
       apellidos: user.apellidos,
     });
 
+    // Crear sesión en BD — expira en 24h
+    const session = await prisma.session.create({
+      data: {
+        userId: user.id,
+        token,
+        expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24),
+      },
+    });
+
     console.log("[LOGIN] Login exitoso para:", correo);
     return res.status(200).json({
       id: user.id,
@@ -91,7 +100,8 @@ export const login = async (req: Request, res: Response) => {
       apellidos: user.apellidos,
       correo: user.correo,
       token,
-      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
+      sessionId: session.id,
+      expiresAt: session.expiresAt.toISOString(),
     });
   } catch (error) {
     console.error("[LOGIN] Error en login:", error);

@@ -17,7 +17,7 @@
         "activo": true,
         "documentosRequeridos": [
           {
-            "id": "paso-1",,
+            "id": "paso-1",
             "tipoDocumento": "IDENTIFICACION_SECUNDARIA",
             "obligatorio": true
           }
