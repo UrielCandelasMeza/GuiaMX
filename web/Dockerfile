@@ -2,12 +2,12 @@ FROM oven/bun:latest
 
 WORKDIR /app
 
-# Install dependencies
 COPY package.json bun.lockb* ./
 RUN bun install --trusted
 
-# Copy source code
 COPY . .
+RUN bun run build
 
-# Start the application in development mode
-CMD ["bun", "run", "dev"]
+EXPOSE 3000
+
+CMD ["sh", "-c", "bun run start -- -H 0.0.0.0 -p ${PORT:-3000}"]
