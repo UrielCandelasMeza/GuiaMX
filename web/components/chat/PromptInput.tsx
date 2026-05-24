@@ -33,7 +33,7 @@ export default function PromptInput({ onSend, disabled }: PromptInputProps) {
         rows={1}
         className={cn(
           "flex-1 resize-none bg-transparent text-sm outline-none placeholder:text-muted-foreground",
-          "max-h-40 min-h-[2rem] py-1"
+          "max-h-40 min-h-8 py-1",
         )}
         placeholder="Escribe tu consulta… (Enter para enviar)"
         value={value}
@@ -46,7 +46,7 @@ export default function PromptInput({ onSend, disabled }: PromptInputProps) {
         aria-label="Enviar mensaje"
         onClick={handleSend}
         disabled={!value.trim() || disabled}
-        className="mb-0.5 flex-shrink-0 rounded-lg bg-brand-600 p-2 text-white transition-colors hover:bg-brand-800 disabled:opacity-40"
+        className="mb-0.5 shrink-0 rounded-lg bg-brand-600 p-2 text-white transition-colors hover:bg-brand-800 disabled:opacity-40"
       >
         <SendHorizontal className="h-4 w-4" />
       </button>
