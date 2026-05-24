@@ -12,7 +12,7 @@ import type { Tramite, Paso, DocumentoCompatibilidad } from "@/types";
 import { Button } from "@/components/ui/button";
 import PasoTimeline from "@/components/tramites/PasoTimeline";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 /* ── Fetchers ────────────────────────────────────────────────────────────── */
 async function fetchTramite(id: string, token: string): Promise<Tramite | null> {

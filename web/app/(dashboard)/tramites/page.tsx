@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import type { Tramite } from "@/types";
 import TramiteCard from "@/components/tramites/TramiteCard";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
+const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
 async function fetchTramites(token: string): Promise<Tramite[]> {
   try {

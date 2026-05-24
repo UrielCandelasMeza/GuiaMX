@@ -44,9 +44,13 @@ export const authConfig: NextAuthConfig = {
       },
       async authorize(credentials) {
         const parsed = credentialsSchema.safeParse(credentials);
-        if (!parsed.success) return null;
+        if (!parsed.success) {
+          console.log("[AUTH] Validación de schema falló:", parsed.error.message);
+          return null;
+        }
 
         try {
+          console.log("[AUTH] Intentando login con:", parsed.data.correo);
           const res = await fetch(
             `${process.env.NEXT_PUBLIC_API_URL}/auth/login`,
             {
@@ -59,7 +63,13 @@ export const authConfig: NextAuthConfig = {
             }
           );
 
-          if (!res.ok) return null;
+          console.log("[AUTH] Respuesta del backend:", res.status);
+
+          if (!res.ok) {
+            const errorData = await res.json().catch(() => ({}));
+            console.log("[AUTH] Error del backend:", errorData);
+            return null;
+          }
 
           const data = await res.json() as {
             id: string;
@@ -69,14 +79,16 @@ export const authConfig: NextAuthConfig = {
             token: string;
           };
 
+          console.log("[AUTH] Login exitoso para:", data.correo);
           return {
             id:        data.id,
             nombre:    data.nombre,
             apellidos: data.apellidos,
-            email:     data.correo,   // next-auth requiere "email"
+            email:     data.correo,
             token:     data.token,
           };
-        } catch {
+        } catch (error) {
+          console.error("[AUTH] Error en authorize:", error);
           return null;
         }
       },
