@@ -7,5 +7,268 @@ datasource db {
   provider = "postgresql"
 }
 
-// Models
+// ─────────────────────────────────────────
+// USUARIOS
+// ─────────────────────────────────────────
 
+model User {
+  id        String   @id @default(uuid())
+  nombre    String
+  apellidos String
+  correo    String   @unique
+  password  String // bcrypt hash
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Sesiones y chat
+  sessions     Session[]
+  chatMessages ChatMessage[]
+
+  // Documentos que posee el usuario (solo metadata, sin archivos)
+  documentos UserDocumento[]
+
+  // Tramites iniciados por el usuario
+  tramitesSeguimiento TramiteUsuario[]
+
+  @@map("users")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  token     String   @unique
+  resumen   String?  @db.Text // Resumen de la última sesión
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("sessions")
+}
+
+// ─────────────────────────────────────────
+// DOCUMENTOS
+// Catálogo de tipos de documentos del sistema.
+// Los archivos nunca se guardan; solo se registra si el usuario los tiene.
+// ─────────────────────────────────────────
+
+enum TipoDocumentoEnum {
+  CURP
+  LLAVE_MX
+  ACTA_NACIMIENTO
+  EFIRMA
+  INE
+  PASAPORTE
+  CARTILLA_MILITAR
+  COMPROBANTE_DOMICILIO
+  LLAVE_CDMX
+  CORREO_PERSONAL
+  CERTIFICACION_ACADEMICA
+  NUMERO_TELEFONO
+  NSS
+  RFC
+  LICENCIA_VEHICULAR_PLACA
+  IDENTIFICACION_SECUNDARIA
+}
+
+model TipoDocumento {
+  id          String            @id @default(uuid())
+  tipo        TipoDocumentoEnum @unique
+  nombre      String // Nombre legible, e.g. "CURP"
+  descripcion String?
+  obligatorio Boolean           @default(false)
+
+  // Relaciones
+  usuariosConDocumento   UserDocumento[]
+  tramitesQueLoRequieren TramiteDocumento[]
+  pasosQueLoRequieren    PasoDocumento[]
+
+  @@map("tipos_documento")
+}
+
+// Tabla de unión: qué documentos tiene cada usuario
+model UserDocumento {
+  id              String   @id @default(uuid())
+  userId          String
+  tipoDocumentoId String
+  verificado      Boolean  @default(false)
+  notas           String?
+  creadoEn        DateTime @default(now())
+
+  user          User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tipoDocumento TipoDocumento @relation(fields: [tipoDocumentoId], references: [id])
+
+  @@unique([userId, tipoDocumentoId])
+  @@map("user_documentos")
+}
+
+// ─────────────────────────────────────────
+// TRÁMITES
+// ─────────────────────────────────────────
+
+model Tramite {
+  id          String   @id @default(uuid())
+  nombre      String
+  descripcion String   @db.Text
+  monto       Decimal  @default(0) @db.Decimal(10, 2) // 0 = gratis
+  activo      Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Documentos previos que necesita el usuario para iniciar el trámite
+  documentosPrevios TramiteDocumento[]
+
+  // Pasos del trámite
+  pasos Paso[]
+
+  // Seguimiento de usuarios
+  tramitesSeguimiento TramiteUsuario[]
+
+  @@map("tramites")
+}
+
+// Documentos requeridos antes de iniciar el trámite
+model TramiteDocumento {
+  id              String  @id @default(uuid())
+  tramiteId       String
+  tipoDocumentoId String
+  obligatorio     Boolean @default(true)
+
+  tramite       Tramite       @relation(fields: [tramiteId], references: [id], onDelete: Cascade)
+  tipoDocumento TipoDocumento @relation(fields: [tipoDocumentoId], references: [id])
+
+  @@unique([tramiteId, tipoDocumentoId])
+  @@map("tramite_documentos")
+}
+
+// ─────────────────────────────────────────
+// PASOS
+// ─────────────────────────────────────────
+
+model Paso {
+  id               String  @id @default(uuid())
+  tramiteId        String
+  orden            Int // 1, 2, 3, ...
+  titulo           String
+  descripcionCorta String
+  descripcionLarga String? @db.Text
+  activo           Boolean @default(true)
+
+  tramite Tramite @relation(fields: [tramiteId], references: [id], onDelete: Cascade)
+
+  // Grafo de dependencias entre pasos (self-referential many-to-many)
+  anteriores PasoDependencia[] @relation("SiguientePaso")
+  siguientes PasoDependencia[] @relation("AnteriorPaso")
+
+  // Documentos necesarios en este paso específico
+  documentosRequeridos PasoDocumento[]
+
+  // Seguimiento de pasos por usuario
+  seguimientoPasos TramiteUsuarioPaso[]
+
+  @@unique([tramiteId, orden])
+  @@map("pasos")
+}
+
+// Grafo de dependencias entre pasos (anteriores / siguientes)
+model PasoDependencia {
+  id          String @id @default(uuid())
+  anteriorId  String
+  siguienteId String
+
+  anterior  Paso @relation("AnteriorPaso", fields: [anteriorId], references: [id], onDelete: Cascade)
+  siguiente Paso @relation("SiguientePaso", fields: [siguienteId], references: [id], onDelete: Cascade)
+
+  @@unique([anteriorId, siguienteId])
+  @@map("paso_dependencias")
+}
+
+// Documentos requeridos en un paso específico
+model PasoDocumento {
+  id              String  @id @default(uuid())
+  pasoId          String
+  tipoDocumentoId String
+  obligatorio     Boolean @default(true)
+
+  paso          Paso          @relation(fields: [pasoId], references: [id], onDelete: Cascade)
+  tipoDocumento TipoDocumento @relation(fields: [tipoDocumentoId], references: [id])
+
+  @@unique([pasoId, tipoDocumentoId])
+  @@map("paso_documentos")
+}
+
+// ─────────────────────────────────────────
+// SEGUIMIENTO DE TRÁMITES POR USUARIO
+// ─────────────────────────────────────────
+
+enum EstadoTramite {
+  PENDIENTE
+  EN_PROGRESO
+  COMPLETADO
+  CANCELADO
+}
+
+model TramiteUsuario {
+  id           String        @id @default(uuid())
+  userId       String
+  tramiteId    String
+  estado       EstadoTramite @default(PENDIENTE)
+  notas        String?       @db.Text
+  iniciadoEn   DateTime      @default(now())
+  completadoEn DateTime?
+
+  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tramite Tramite @relation(fields: [tramiteId], references: [id])
+
+  pasos TramiteUsuarioPaso[]
+
+  @@map("tramite_usuarios")
+}
+
+enum EstadoPaso {
+  PENDIENTE
+  EN_PROGRESO
+  COMPLETADO
+  OMITIDO
+}
+
+model TramiteUsuarioPaso {
+  id               String     @id @default(uuid())
+  tramiteUsuarioId String
+  pasoId           String
+  estado           EstadoPaso @default(PENDIENTE)
+  completadoEn     DateTime?
+  notas            String?
+
+  tramiteUsuario TramiteUsuario @relation(fields: [tramiteUsuarioId], references: [id], onDelete: Cascade)
+  paso           Paso           @relation(fields: [pasoId], references: [id])
+
+  @@unique([tramiteUsuarioId, pasoId])
+  @@map("tramite_usuario_pasos")
+}
+
+// ─────────────────────────────────────────
+// HISTORIAL DE CHAT (contexto para el LLM)
+// ─────────────────────────────────────────
+
+enum RolMensaje {
+  USER
+  ASSISTANT
+  SYSTEM
+}
+
+model ChatMessage {
+  id        String     @id @default(uuid())
+  userId    String
+  sessionId String?
+  rol       RolMensaje
+  contenido String     @db.Text
+  metadata  Json? // contexto extra: tramiteId, pasoId, etc.
+  createdAt DateTime   @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@map("chat_messages")
+}
