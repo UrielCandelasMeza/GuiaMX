@@ -20,6 +20,9 @@ interface UseWebSocketReturn {
   sendMessage: (prompt: string) => void;
 }
 
+const MAX_RECONNECT_ATTEMPTS = 5;
+const RECONNECT_BASE_MS = 1500; // primer reintento a los 1.5 s
+
 /* ── Hook ────────────────────────────────────────────────────────────────── */
 export function useWebSocket({ token }: { token: string }): UseWebSocketReturn {
   const wsRef = useRef<WebSocket | null>(null);
@@ -32,11 +35,14 @@ export function useWebSocket({ token }: { token: string }): UseWebSocketReturn {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const sessionId = (session?.user as any)?.sessionId as string | undefined;
 
+  // Refs para reconexión — no necesitan disparar re-renders
+  const intentionalClose = useRef(false); // true cuando el cleanup del effect cierra el WS
+  const reconnectAttempts = useRef(0);
+  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   useEffect(() => {
     if (!token) return;
 
-    // ws://api:8000/ws?token=JWT  (dentro de Docker)
-    // ws://localhost:8000/ws?token=JWT  (local)
     const WS_BASE =
       process.env.NEXT_PUBLIC_WS_URL ??
       (typeof window !== "undefined"
@@ -44,56 +50,99 @@ export function useWebSocket({ token }: { token: string }): UseWebSocketReturn {
         : "ws://localhost:8000");
 
     const url = `${WS_BASE}/ws?token=${encodeURIComponent(token)}`;
-    const ws = new WebSocket(url);
-    wsRef.current = ws;
 
-    ws.onopen = () => setIsConnected(true);
-    ws.onclose = (event: CloseEvent) => {
-      setIsConnected(false);
-      setIsLoading(false);
-      // Código 4003: sesión inválida — el usuario no existe en BD
-      // (puede ocurrir si la BD fue recreada pero el cliente tenía un token viejo)
-      if (event.code === 4003) {
-        toast.error("Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
-        signOut({ callbackUrl: "/login" });
-      }
-    };
-    ws.onerror = () => {
-      setIsConnected(false);
-      setIsLoading(false);
-      toast.error("Error de conexión con el asistente.");
-    };
+    function connect() {
+      intentionalClose.current = false;
+      const ws = new WebSocket(url);
+      wsRef.current = ws;
 
-    ws.onmessage = (event) => {
-      try {
-        const msg = JSON.parse(event.data as string) as {
-          type: "response" | "error" | "ping";
-          content: string;
-        };
+      ws.onopen = () => {
+        setIsConnected(true);
+        reconnectAttempts.current = 0; // reset al conectar exitosamente
+      };
 
-        if (msg.type === "response") {
-          setMessages((prev) => [
-            ...prev,
-            {
-              id: `assistant-${Date.now()}`,
-              rol: "assistant",
-              contenido: msg.content,
-              timestamp: Date.now(),
-            },
-          ]);
-          setIsLoading(false);
-        } else if (msg.type === "error") {
-          toast.error(msg.content ?? "Error en el asistente.");
-          setIsLoading(false);
+      ws.onclose = (event: CloseEvent) => {
+        setIsConnected(false);
+        setIsLoading(false);
+
+        // Código 4003: usuario no existe en BD → forzar logout
+        if (event.code === 4003) {
+          toast.error("Tu sesión ha expirado. Por favor, inicia sesión de nuevo.");
+          signOut({ callbackUrl: "/login" });
+          return;
         }
-        // "ping" se ignora en el cliente
-      } catch {
-        // ignorar mensajes malformados
-      }
-    };
+
+        // Código 4001: token inválido → forzar logout
+        if (event.code === 4001) {
+          toast.error("Token inválido. Por favor, inicia sesión de nuevo.");
+          signOut({ callbackUrl: "/login" });
+          return;
+        }
+
+        // Si fue intencional (cleanup del effect) → no reconectar, no mostrar toast
+        if (intentionalClose.current) return;
+
+        // Desconexión inesperada → reconectar con backoff exponencial
+        if (reconnectAttempts.current < MAX_RECONNECT_ATTEMPTS) {
+          const delay = RECONNECT_BASE_MS * 2 ** reconnectAttempts.current;
+          reconnectAttempts.current += 1;
+          reconnectTimer.current = setTimeout(connect, delay);
+        } else {
+          // Agotamos los reintentos → informar al usuario
+          toast.error(
+            "No se pudo reconectar con el asistente. Recarga la página.",
+          );
+        }
+      };
+
+      // onerror siempre dispara ANTES de onclose — no tiene info útil extra
+      // (los navegadores ocultan detalles WS por seguridad).
+      // Delegamos todo el manejo a onclose para evitar toasts duplicados.
+      ws.onerror = () => {
+        // Solo actualizamos estado; onclose manejará el toast y la reconexión.
+        setIsConnected(false);
+        setIsLoading(false);
+      };
+
+      ws.onmessage = (event) => {
+        try {
+          const msg = JSON.parse(event.data as string) as {
+            type: "response" | "error" | "ping";
+            content: string;
+          };
+
+          if (msg.type === "response") {
+            setMessages((prev) => [
+              ...prev,
+              {
+                id: `assistant-${Date.now()}`,
+                rol: "assistant",
+                contenido: msg.content,
+                timestamp: Date.now(),
+              },
+            ]);
+            setIsLoading(false);
+          } else if (msg.type === "error") {
+            toast.error(msg.content ?? "Error en el asistente.");
+            setIsLoading(false);
+          }
+          // "ping" se ignora en el cliente
+        } catch {
+          // ignorar mensajes malformados
+        }
+      };
+    }
+
+    connect();
 
     return () => {
-      ws.close();
+      // Marcar como cierre intencional para suprimir reconexión y toast
+      intentionalClose.current = true;
+      if (reconnectTimer.current) {
+        clearTimeout(reconnectTimer.current);
+        reconnectTimer.current = null;
+      }
+      wsRef.current?.close();
     };
   }, [token]);
 
@@ -101,7 +150,11 @@ export function useWebSocket({ token }: { token: string }): UseWebSocketReturn {
   const sendMessage = useCallback(
     (prompt: string) => {
       const trimmed = prompt.trim();
-      if (!trimmed || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN)
+      if (
+        !trimmed ||
+        !wsRef.current ||
+        wsRef.current.readyState !== WebSocket.OPEN
+      )
         return;
 
       // 1. Agrega el mensaje del usuario inmediatamente al UI
@@ -128,4 +181,3 @@ export function useWebSocket({ token }: { token: string }): UseWebSocketReturn {
 
   return { isConnected, isLoading, messages, sendMessage };
 }
-

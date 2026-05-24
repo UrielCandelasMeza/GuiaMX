@@ -5,6 +5,7 @@ import { Bot, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWebSocket, type Message } from "@/hooks/useWebSocket";
 import DocumentosPanel from "@/components/chat/DocumentosPanel";
+import MisTramitesPanel from "@/components/chat/MisTramitesPanel";
 
 /* ── Chips de ejemplo ────────────────────────────────────────────────────── */
 const EXAMPLE_PROMPTS = [
@@ -127,13 +128,24 @@ export default function ChatClient({ token }: { token: string }) {
   });
 
   const [draft, setDraft] = useState("");
+  const [llmRefreshTrigger, setLlmRefreshTrigger] = useState(0);
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const prevMsgCountRef = useRef(0);
 
   /* Auto-scroll al último mensaje */
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isLoading]);
+
+  /* Refrescar el panel de trámites cada vez que el asistente agrega un mensaje */
+  useEffect(() => {
+    const assistantMsgs = messages.filter((m) => m.rol === "assistant").length;
+    if (assistantMsgs > prevMsgCountRef.current) {
+      prevMsgCountRef.current = assistantMsgs;
+      setLlmRefreshTrigger((n) => n + 1);
+    }
+  }, [messages]);
 
   /* Ajuste dinámico de altura del textarea */
   useEffect(() => {
@@ -176,7 +188,10 @@ export default function ChatClient({ token }: { token: string }) {
           </h1>
           <ConnectionBadge connected={isConnected} />
         </div>
-        <DocumentosPanel token={token} />
+        <div className="flex items-center gap-2">
+          <MisTramitesPanel token={token} refreshTrigger={llmRefreshTrigger} />
+          <DocumentosPanel token={token} />
+        </div>
       </div>
 
       {/* ── b) ÁREA DE MENSAJES ── */}

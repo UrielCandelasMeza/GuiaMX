@@ -11,8 +11,9 @@ interface TramiteCardProps {
 
 export default function TramiteCard({ tramite }: TramiteCardProps) {
   const router = useRouter();
-  const { id, nombre, descripcion, monto, _count } = tramite;
-  const numPasos = _count?.pasos ?? 0;
+  const { id, nombre, descripcion, monto, totalPasos, _count } = tramite;
+  // totalPasos viene del backend; _count.pasos es compatibilidad con datos estáticos
+  const numPasos = totalPasos ?? _count?.pasos ?? 0;
 
   return (
     <article
@@ -24,7 +25,7 @@ export default function TramiteCard({ tramite }: TramiteCardProps) {
       className="flex cursor-pointer flex-col rounded-md border border-slate-200 bg-white p-5 transition-all hover:border-brand-600 hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-600"
     >
       {/* Precio badge */}
-      {monto === 0 ? (
+      {Number(monto) === 0 ? (
         <span className="inline-flex w-fit items-center rounded border border-green-200 bg-green-50 px-2.5 py-0.5 text-xs font-medium text-green-800">
           Gratuito
         </span>

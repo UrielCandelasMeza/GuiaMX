@@ -83,8 +83,8 @@ const TOTAL_DOCS = GRUPOS.reduce((acc, g) => acc + g.docs.length, 0); // 16
 /* ── Tipos de la respuesta del API ──────────────────────────────────────── */
 // GET /documentos → [{ id, tipo, nombre, tieneDocumento }]
 interface ApiDocumento {
-  id: string;           // ID del TipoDocumento en BD
-  tipo: string;         // Coincide con TipoDocumentoEnum
+  id: string;           // UUID del TipoDocumento en BD (se usa en el toggle)
+  tipo: string;         // Coincide con TipoDocumentoEnum (ej: "CURP")
   nombre: string;
   tieneDocumento: boolean;
 }
@@ -92,12 +92,12 @@ interface ApiDocumento {
 /* ── Hook de estado de documentos ───────────────────────────────────────── */
 function useDocumentos(token: string) {
   /**
-   * Mapa tipo (CURP, INE…) → tipoDocumentoId en BD (null = no registrado)
-   * La API usa tipoDocumentoId para el toggle, no un id de userDocumento
+   * Mapa tipo (ej: "CURP") → { bdId: UUID del TipoDocumento, activo: boolean }
+   * bdId es el UUID del TipoDocumento que el backend espera en /toggle/:tipoDocumentoId
    */
-  const [registrados, setRegistrados] = useState<Map<string, string | null>>(
-    new Map(),
-  );
+  const [registrados, setRegistrados] = useState<
+    Map<string, { bdId: string; activo: boolean }>
+  >(new Map());
   const [cargando, setCargando] = useState(true);
 
   /* Carga inicial: GET /documentos */
@@ -112,17 +112,21 @@ function useDocumentos(token: string) {
         if (!res.ok) throw new Error();
         const data = (await res.json()) as ApiDocumento[];
         if (!cancelled) {
-          // Mapa: tipo → id (del TipoDocumento) si tieneDocumento, null si no
-          const mapa = new Map<string, string | null>();
+          const mapa = new Map<string, { bdId: string; activo: boolean }>();
           for (const doc of data) {
-            mapa.set(doc.tipo, doc.tieneDocumento ? doc.id : null);
+            // doc.tipo es el enum string (CURP, INE…), doc.id es el UUID del TipoDocumento
+            mapa.set(doc.tipo, { bdId: doc.id, activo: doc.tieneDocumento });
           }
           setRegistrados(mapa);
         }
       } catch {
         if (!cancelled) {
           setRegistrados(
-            new Map(GRUPOS.flatMap((g) => g.docs.map((d) => [d.tipoId, null]))),
+            new Map(
+              GRUPOS.flatMap((g) =>
+                g.docs.map((d) => [d.tipoId, { bdId: "", activo: false }]),
+              ),
+            ),
           );
         }
       } finally {
@@ -134,20 +138,22 @@ function useDocumentos(token: string) {
   }, [token]);
 
   /**
-   * Toggle: llama a POST /documentos/toggle/:tipoDocumentoId
-   * El backend decide si crear o eliminar el registro.
+   * Toggle: llama a POST /documentos/toggle/:tipoDocumentoId (UUID)
+   * El backend decide si crear o eliminar el UserDocumento.
+   * Aplica optimistic update: el UI cambia de inmediato, revierte si hay error.
    */
   const toggle = useCallback(
     async (tipoId: string, nombre: string) => {
-      const bdId = registrados.get(tipoId);
-      if (!bdId) return; // No tenemos el id de BD todavía (cargando)
+      const entrada = registrados.get(tipoId);
+      // Sin el UUID del TipoDocumento no podemos llamar al API
+      if (!entrada?.bdId) return;
 
-      const yaActivo = registrados.get(tipoId) !== null;
+      const { bdId, activo: yaActivo } = entrada;
 
       // Optimistic update
       setRegistrados((prev) => {
         const m = new Map(prev);
-        m.set(tipoId, yaActivo ? null : bdId);
+        m.set(tipoId, { bdId, activo: !yaActivo });
         return m;
       });
 
@@ -158,10 +164,10 @@ function useDocumentos(token: string) {
         });
         if (!res.ok) throw new Error();
         const result = (await res.json()) as { tieneDocumento: boolean };
-        // Sincronizar con la respuesta real
+        // Confirmar con la respuesta real
         setRegistrados((prev) => {
           const m = new Map(prev);
-          m.set(tipoId, result.tieneDocumento ? bdId : null);
+          m.set(tipoId, { bdId, activo: result.tieneDocumento });
           return m;
         });
         toast.success(
@@ -170,10 +176,10 @@ function useDocumentos(token: string) {
             : `"${nombre}" eliminado de tu perfil.`,
         );
       } catch {
-        // Revertir al estado anterior
+        // Revertir si falla
         setRegistrados((prev) => {
           const m = new Map(prev);
-          m.set(tipoId, yaActivo ? bdId : null);
+          m.set(tipoId, { bdId, activo: yaActivo });
           return m;
         });
         toast.error(`No se pudo actualizar "${nombre}". Inténtalo de nuevo.`);
@@ -182,7 +188,7 @@ function useDocumentos(token: string) {
     [token, registrados],
   );
 
-  const conteo = [...registrados.values()].filter(Boolean).length;
+  const conteo = [...registrados.values()].filter((v) => v.activo).length;
 
   return { registrados, cargando, toggle, conteo };
 }
@@ -219,7 +225,8 @@ function PanelContent({ token }: { token: string }) {
             <div key={grupo.categoria} className="mb-5">
               <p className="label-md mb-2 text-brand-600">{grupo.categoria}</p>
               {grupo.docs.map((doc) => {
-                const activo = !!registrados.get(doc.tipoId);
+                const entrada = registrados.get(doc.tipoId);
+                const activo = entrada?.activo ?? false;
                 return (
                   <div
                     key={doc.tipoId}
@@ -245,11 +252,11 @@ function PanelContent({ token }: { token: string }) {
                       </span>
                     </div>
 
-                    {/* Switch */}
+                    {/* Switch controlado — reacciona a updates optimistas */}
                     <Switch
                       id={`doc-switch-${doc.tipoId}`}
                       size="sm"
-                      defaultChecked={activo}
+                      checked={activo}
                       aria-label={`${activo ? "Eliminar" : "Agregar"} ${doc.nombre}`}
                       onCheckedChange={() => toggle(doc.tipoId, doc.nombre)}
                     />

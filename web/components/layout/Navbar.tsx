@@ -7,6 +7,7 @@ import {
   Scale,
   MessageCircle,
   FileText,
+  ClipboardList,
   Menu,
   LogOut,
 } from "lucide-react";
@@ -31,8 +32,9 @@ import { cn } from "@/lib/utils";
 
 /* ── Nav links config ────────────────────────────────────────────────────── */
 const NAV_LINKS = [
-  { href: "/chat",     label: "Chat",         icon: MessageCircle },
-  { href: "/tramites", label: "Mis Trámites", icon: FileText },
+  { href: "/chat",                   label: "Chat",          icon: MessageCircle },
+  { href: "/tramites",               label: "Trámites",      icon: FileText },
+  { href: "/tramites/mis-tramites",  label: "Mis trámites",  icon: ClipboardList },
 ] as const;
 
 /* ── Iniciales del usuario ───────────────────────────────────────────────── */

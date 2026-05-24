@@ -125,6 +125,32 @@ export const TOOL_DEFINITIONS = [
       required: ["userId"],
     },
   },
+  {
+    type: "function" as const,
+    name: "actualizar_estado_paso",
+    description:
+      "Actualiza el estado de un paso dentro de un trámite del usuario. "
+      + "Uásalo cuando el usuario indique que completó, está haciendo o quiere saltarse un paso.",
+    parameters: {
+      type: "object",
+      properties: {
+        tramiteUsuarioId: {
+          type: "string",
+          description: "ID del TramiteUsuario (seguimiento, no el trámite base)",
+        },
+        pasoId: {
+          type: "string",
+          description: "ID del paso dentro del trámite",
+        },
+        estado: {
+          type: "string",
+          enum: ["PENDIENTE", "EN_PROGRESO", "COMPLETADO", "OMITIDO"],
+          description: "Nuevo estado para el paso",
+        },
+      },
+      required: ["tramiteUsuarioId", "pasoId", "estado"],
+    },
+  },
 ] as const;
 
 // ── Implementaciones ──────────────────────────────────────────────────────────
@@ -268,6 +294,87 @@ export async function ejecutarTool(
           estado: p.estado,
         })),
       }));
+    }
+
+    case "actualizar_estado_paso": {
+      const estadosValidos = ["PENDIENTE", "EN_PROGRESO", "COMPLETADO", "OMITIDO"];
+      if (!estadosValidos.includes(args.estado)) {
+        return { error: `Estado inválido: ${args.estado}` };
+      }
+
+      // Verificar que el paso existe en ese TramiteUsuario
+      const tupaso = await prisma.tramiteUsuarioPaso.findUnique({
+        where: {
+          tramiteUsuarioId_pasoId: {
+            tramiteUsuarioId: args.tramiteUsuarioId,
+            pasoId: args.pasoId,
+          },
+        },
+        include: {
+          paso: {
+            include: {
+              anteriores: { include: { anterior: { select: { id: true } } } },
+            },
+          },
+        },
+      });
+      if (!tupaso) return { error: "Paso no encontrado en este trámite" };
+
+      // Validar dependencias si se quiere COMPLETAR
+      if (args.estado === "COMPLETADO") {
+        const idsPrevios = tupaso.paso.anteriores.map((d) => d.anterior.id);
+        if (idsPrevios.length > 0) {
+          const previos = await prisma.tramiteUsuarioPaso.findMany({
+            where: { tramiteUsuarioId: args.tramiteUsuarioId, pasoId: { in: idsPrevios } },
+          });
+          const pendiente = previos.some(
+            (p) => p.estado !== "COMPLETADO" && p.estado !== "OMITIDO",
+          );
+          if (pendiente) {
+            return { error: "Hay pasos anteriores sin completar. El usuario debe terminarlos primero." };
+          }
+        }
+      }
+
+      const actualizado = await prisma.tramiteUsuarioPaso.update({
+        where: {
+          tramiteUsuarioId_pasoId: {
+            tramiteUsuarioId: args.tramiteUsuarioId,
+            pasoId: args.pasoId,
+          },
+        },
+        data: {
+          estado: args.estado as "PENDIENTE" | "EN_PROGRESO" | "COMPLETADO" | "OMITIDO",
+          completadoEn: args.estado === "COMPLETADO" ? new Date() : undefined,
+        },
+      });
+
+      // Verificar si el trámite completo terminó
+      const todosPasos = await prisma.tramiteUsuarioPaso.findMany({
+        where: { tramiteUsuarioId: args.tramiteUsuarioId },
+      });
+      const tramiteCompletado = todosPasos.every(
+        (p) => p.estado === "COMPLETADO" || p.estado === "OMITIDO",
+      );
+
+      if (tramiteCompletado) {
+        await prisma.tramiteUsuario.update({
+          where: { id: args.tramiteUsuarioId },
+          data: { estado: "COMPLETADO", completadoEn: new Date() },
+        });
+      } else if (todosPasos.some((p) => p.estado === "EN_PROGRESO" || p.estado === "COMPLETADO")) {
+        await prisma.tramiteUsuario.update({
+          where: { id: args.tramiteUsuarioId },
+          data: { estado: "EN_PROGRESO" },
+        });
+      }
+
+      return {
+        mensaje: `Paso actualizado a ${args.estado} correctamente`,
+        pasoId: actualizado.pasoId,
+        estado: actualizado.estado,
+        tramiteCompletado,
+      };
     }
 
     default:

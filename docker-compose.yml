@@ -23,12 +23,15 @@ services:
     environment:
       DATABASE_URL: "postgresql://user:password@db:5432/guiamx?schema=public"
       PORT: 8000
+      JWT_SECRET: "9c6cd49b3b79c60708478c2f9ba0575137b652021aa1d18064e25cf6bcc91e80"
+      PROJECT_ENDPOINT: "https://guiamx.openai.azure.com/"
+      AZURE_OPENAI_API_KEY: "BuMo1khvgQ5xB6HzGkjXfNUbO3B11GvEeA2lzmBMNnoML01HJKnDJQQJ99CEACHYHv6XJ3w3AAABACOGSsQ0"
     ports:
       - "8000:8000"
     volumes:
       - ./api:/app:z
       - /app/node_modules
-    command: sh -c "bunx --bun prisma migrate dev --name init && bunx --bun prisma generate && bun run scripts/seed-all.ts && bun run dev"
+    command: sh -c "bunx --bun prisma migrate dev --name init && bunx --bun prisma generate && bun run scripts/seed-all.ts && bun --env-file=.env run dev"
     depends_on:
       - db
 
@@ -40,6 +43,16 @@ services:
     restart: always
     user: root
     working_dir: /app
+    environment:
+      # NextAuth — el NEXTAUTH_SECRET debe coincidir con el JWT_SECRET de la API
+      # para que los tokens generados por NextAuth sean verificables en el WS
+      NEXTAUTH_URL: "http://localhost:3000"
+      NEXTAUTH_SECRET: "9c6cd49b3b79c60708478c2f9ba0575137b652021aa1d18064e25cf6bcc91e80"
+      # SSR server-side: el contenedor web habla con el servicio api por red Docker
+      INTERNAL_API_URL: "http://api:8000"
+      # Client-side (browser): el usuario accede desde su máquina
+      NEXT_PUBLIC_API_URL: "http://localhost:8000"
+      NEXT_PUBLIC_WS_URL: "ws://localhost:8000"
     ports:
       - "3000:3000"
     volumes:

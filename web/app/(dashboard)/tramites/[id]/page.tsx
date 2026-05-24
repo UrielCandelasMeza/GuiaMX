@@ -1,60 +1,73 @@
 import Link from "next/link";
 import { redirect, notFound } from "next/navigation";
-import {
-  FileText,
-  CheckCircle2,
-  XCircle,
-  ChevronRight,
-} from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { auth } from "@/lib/auth";
-import { cn } from "@/lib/utils";
-import type { Tramite, Paso, DocumentoCompatibilidad } from "@/types";
-import { Button } from "@/components/ui/button";
+import type { Paso } from "@/types";
 import PasoTimeline from "@/components/tramites/PasoTimeline";
+import DocumentosRequeridos from "@/components/tramites/DocumentosRequeridos";
+import IniciarTramiteButton from "@/components/tramites/IniciarTramiteButton";
+import { Button } from "@/components/ui/button";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+const API_URL = process.env.INTERNAL_API_URL ?? "http://localhost:8000";
+
+/* ── Tipos del detalle del trámite (GET /tramites/:id) ───────────────────── */
+interface DocPrevio {
+  id: string;
+  tipo: string;
+  nombre: string;
+  obligatorio: boolean;
+}
+
+interface TramiteDetalle {
+  id: string;
+  nombre: string;
+  descripcion: string;
+  monto: number;
+  documentosPrevios: DocPrevio[];
+  pasos: Paso[];
+}
+
+interface ApiDocumento {
+  id: string;
+  tipo: string;
+  nombre: string;
+  tieneDocumento: boolean;
+}
+
+export interface CompatibilidadDoc {
+  nombre: string;
+  requerido: boolean;
+  disponible: boolean;
+}
 
 /* ── Fetchers ────────────────────────────────────────────────────────────── */
-async function fetchTramite(id: string, token: string): Promise<Tramite | null> {
+async function fetchTramiteDetalle(
+  id: string,
+  token: string,
+): Promise<TramiteDetalle | null> {
   try {
     const res = await fetch(`${API_URL}/tramites/${id}`, {
       headers: { Authorization: `Bearer ${token}` },
       next: { revalidate: 60 },
     });
+    console.log(res);
     if (res.status === 404) return null;
     if (!res.ok) return null;
     return res.json();
-  } catch {
+  } catch (error) {
+    console.log(error);
     return null;
   }
 }
 
-async function fetchPasos(id: string, token: string): Promise<Paso[]> {
+async function fetchDocumentosUsuario(token: string): Promise<ApiDocumento[]> {
   try {
-    const res = await fetch(`${API_URL}/tramites/${id}/pasos`, {
-      headers: { Authorization: `Bearer ${token}` },
-      next: { revalidate: 60 },
-    });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return Array.isArray(data) ? data : (data.data ?? []);
-  } catch {
-    return [];
-  }
-}
-
-async function fetchCompatibilidad(
-  id: string,
-  token: string
-): Promise<DocumentoCompatibilidad[]> {
-  try {
-    const res = await fetch(`${API_URL}/tramites/${id}/compatibilidad`, {
+    const res = await fetch(`${API_URL}/documentos`, {
       headers: { Authorization: `Bearer ${token}` },
       next: { revalidate: 30 },
     });
     if (!res.ok) return [];
-    const data = await res.json();
-    return Array.isArray(data) ? data : (data.data ?? []);
+    return res.json();
   } catch {
     return [];
   }
@@ -75,75 +88,6 @@ function PrecioBadge({ monto }: { monto: number }) {
   );
 }
 
-/* ── DocumentosPanel ─────────────────────────────────────────────────────── */
-function DocumentosPanel({
-  documentos,
-}: {
-  documentos: DocumentoCompatibilidad[];
-  tramiteId: string;
-}) {
-  const obligatorios = documentos.filter((d) => d.requerido);
-  const tienesTodos  = obligatorios.every((d) => d.disponible);
-
-  return (
-    <aside className="rounded-md border border-slate-200 bg-white p-5">
-      <div className="mb-4 flex items-center gap-2">
-        <FileText className="h-4 w-4 text-brand-600" />
-        <h3 className="text-sm font-semibold text-brand-900">
-          Documentos necesarios
-        </h3>
-      </div>
-
-      {documentos.length === 0 ? (
-        <p className="text-xs text-secondary">
-          Información de documentos no disponible.
-        </p>
-      ) : (
-        <ul className="mb-5 flex flex-col gap-2.5">
-          {documentos.map((doc) => (
-            <li key={doc.nombre} className="flex items-center gap-2.5">
-              {doc.disponible ? (
-                <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />
-              ) : (
-                <XCircle className="h-4 w-4 shrink-0 text-red-400" />
-              )}
-              <span
-                className={cn(
-                  "text-sm",
-                  doc.disponible ? "text-slate-700" : "text-slate-400",
-                  doc.requerido && !doc.disponible && "font-medium"
-                )}
-              >
-                {doc.nombre}
-                {doc.requerido && (
-                  <span className="ml-1 text-xs text-red-400">*</span>
-                )}
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {tienesTodos ? (
-        <Button id="btn-iniciar-tramite" className="w-full">
-          Iniciar trámite
-        </Button>
-      ) : (
-        <button
-          disabled
-          className="w-full cursor-not-allowed rounded bg-slate-100 px-4 py-2 text-sm font-medium text-slate-400"
-        >
-          Documentos incompletos
-        </button>
-      )}
-
-      {obligatorios.length > 0 && (
-        <p className="mt-3 text-xs text-placeholder">* Documento obligatorio</p>
-      )}
-    </aside>
-  );
-}
-
 /* ── Page ────────────────────────────────────────────────────────────────── */
 interface TramiteDetailPageProps {
   params: Promise<{ id: string }>;
@@ -154,18 +98,39 @@ export default async function TramiteDetailPage({
 }: TramiteDetailPageProps) {
   const { id } = await params;
 
+  console.log(id);
+
   const session = await auth();
   if (!session) redirect("/login");
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const token = (session.user as any).apiToken as string ?? "";
+  const token = ((session.user as any).apiToken as string) ?? "";
 
-  const [tramite, pasos, compatibilidad] = await Promise.all([
-    fetchTramite(id, token),
-    fetchPasos(id, token),
-    fetchCompatibilidad(id, token),
+  // Los pasos vienen dentro del mismo GET /tramites/:id — no hay endpoint separado
+  const [tramite, documentosUsuario] = await Promise.all([
+    fetchTramiteDetalle(id, token),
+    fetchDocumentosUsuario(token),
   ]);
 
   if (!tramite) notFound();
+
+  // Calcular compatibilidad: cruzar documentosPrevios del trámite con los del usuario
+  const tiposQueElUsuarioTiene = new Set(
+    documentosUsuario.filter((d) => d.tieneDocumento).map((d) => d.tipo),
+  );
+
+  const compatibilidad: CompatibilidadDoc[] = tramite.documentosPrevios.map(
+    (dp) => ({
+      nombre: dp.nombre,
+      requerido: dp.obligatorio,
+      disponible: tiposQueElUsuarioTiene.has(dp.tipo),
+    }),
+  );
+
+  const puedeIniciar = compatibilidad
+    .filter((d) => d.requerido)
+    .every((d) => d.disponible);
+
+  const pasos: Paso[] = tramite.pasos ?? [];
 
   return (
     <div className="mx-auto w-full max-w-6xl px-6 py-8">
@@ -184,7 +149,9 @@ export default async function TramiteDetailPage({
       {/* Header */}
       <div className="mb-8">
         <div className="mb-2 flex flex-wrap items-center gap-3">
-          <h1 className="text-2xl font-bold text-brand-900">{tramite.nombre}</h1>
+          <h1 className="text-2xl font-bold text-brand-900">
+            {tramite.nombre}
+          </h1>
           <PrecioBadge monto={tramite.monto ?? 0} />
         </div>
         <p className="max-w-2xl text-[15px] text-secondary">
@@ -194,12 +161,11 @@ export default async function TramiteDetailPage({
 
       {/* Dos columnas */}
       <div className="grid gap-8 lg:grid-cols-3">
-        {/* Principal — timeline */}
+        {/* Principal — timeline de pasos */}
         <div className="lg:col-span-2">
           <h2 className="mb-6 text-lg font-semibold text-brand-800">
             Pasos del trámite
           </h2>
-          {/* Determina el primer paso no completado como el actual */}
           <PasoTimeline
             pasos={pasos}
             pasoActualIdx={
@@ -213,9 +179,17 @@ export default async function TramiteDetailPage({
           )}
         </div>
 
-        {/* Lateral — documentos */}
+        {/* Lateral — documentos requeridos + acciones */}
         <div className="flex flex-col gap-4">
-          <DocumentosPanel documentos={compatibilidad} tramiteId={id} />
+          {/* Panel de documentos requeridos con compatibilidad real */}
+          <DocumentosRequeridos compatibilidad={compatibilidad} />
+
+          {/* Botón iniciar trámite — client component, llama a POST /tramites/:id/iniciar */}
+          <IniciarTramiteButton
+            tramiteId={id}
+            token={token}
+            habilitado={puedeIniciar}
+          />
 
           <Link href={`/chat?tramite=${id}`} className="no-underline">
             <Button

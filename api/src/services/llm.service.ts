@@ -1,15 +1,31 @@
 import client from "../lib/azure";
 import { prisma } from "../lib/prisma";
 import { TOOL_DEFINITIONS, ejecutarTool } from "./tools";
+import { armarContextoUsuario } from "./contexto.service";
 import type { RolMensaje } from "../../generated/prisma/enums";
 
 const MODEL = "gpt-4.1-mini";
 
 const SYSTEM_PROMPT_BASE = `Eres GuíaMX, un asistente especializado en trámites gubernamentales mexicanos.
-Ayudas a los usuarios a entender qué documentos necesitan, los guías paso a paso en sus trámites, y puedes consultar y actualizar su información.
+Ayudas a los usuarios a entender qué documentos necesitan y los guías paso a paso en sus trámites.
 Siempre responde en español. Sé amable, claro y conciso.
-Cuando el usuario mencione que tiene o no tiene un documento, usa las funciones disponibles para actualizar su perfil.
-Cuando pregunte por un trámite, busca la información y explícala paso a paso.`;
+
+## REGLAS CRÍTICAS PARA ACTUALIZAR PASOS (OBLIGATORIO):
+- Cuando el usuario diga que YA HIZO, COMPLETÓ, TERMINÓ o REALIZÓ un paso → llama INMEDIATAMENTE a "actualizar_estado_paso" con estado "COMPLETADO".
+- Cuando el usuario diga que ESTÁ HACIENDO o EMPEZANDO un paso → llama a "actualizar_estado_paso" con estado "EN_PROGRESO".
+- Cuando el usuario diga que OMITE o SALTA un paso → llama a "actualizar_estado_paso" con estado "OMITIDO".
+- Usa los IDs exactos del contexto del usuario (tramiteUsuarioId y pasoId). NUNCA inventes IDs.
+- Después de actualizar, confirma al usuario qué paso se marcó y cuál sigue.
+- NO describas el estado del trámite sin antes actualizarlo si el usuario ya indicó avance.
+
+## REGLAS PARA DOCUMENTOS:
+- Cuando el usuario mencione que tiene un documento → llama a "agregar_documento_usuario".
+- Cuando el usuario diga que no tiene o quiere quitar un documento → llama a "eliminar_documento_usuario".
+
+## REGLAS GENERALES:
+- Cuando preguntes por un trámite → usa "buscar_tramites" u "obtener_detalle_tramite".
+- Cuando el usuario quiera iniciar un trámite nuevo → usa "iniciar_tramite_usuario".
+- Usa las herramientas disponibles antes de responder con suposiciones.`;
 
 interface HistorialMensaje {
   rol: RolMensaje;
@@ -28,9 +44,11 @@ export async function procesarMensajeLLM(params: {
   sessionId: string;
   mensaje: string;
   historial: HistorialMensaje[];
-  contextExtra?: string; // contexto del usuario inyectado desde contexto.service
 }): Promise<string> {
-  const { userId, sessionId, mensaje, historial, contextExtra } = params;
+  const { userId, sessionId, mensaje, historial } = params;
+
+  // Obtener contexto completo del usuario para el system prompt
+  const contextExtra = await armarContextoUsuario(userId);
 
   // Guardar el mensaje del usuario en BD
   await prisma.chatMessage.create({
@@ -64,12 +82,20 @@ export async function procesarMensajeLLM(params: {
 
   for (let i = 0; i < MAX_LOOPS; i++) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const response = await (client.responses as any).create({
-      model: MODEL,
-      instructions,
-      input: currentInput,
-      tools: TOOL_DEFINITIONS,
-    });
+    let response: any;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      response = await (client.responses as any).create({
+        model: MODEL,
+        instructions,
+        input: currentInput,
+        tools: TOOL_DEFINITIONS,
+      });
+    } catch (apiErr: unknown) {
+      const msg = apiErr instanceof Error ? apiErr.message : String(apiErr);
+      console.error("[LLM] Error llamando a Azure OpenAI:", msg);
+      throw apiErr;
+    }
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const output: any[] = response.output ?? [];

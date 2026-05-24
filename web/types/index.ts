@@ -14,6 +14,9 @@ export interface Tramite {
   nombre: string;
   descripcion: string;
   monto: number;
+  /** Devuelto por GET /tramites como campo directo */
+  totalPasos?: number;
+  /** Compatibilidad con datos estáticos legacy */
   _count?: { pasos: number };
 }
 
