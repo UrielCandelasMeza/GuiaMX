@@ -27,30 +27,28 @@ const GRUPOS: { categoria: string; docs: DocumentoInfo[] }[] = [
   {
     categoria: "Identificación oficial",
     docs: [
-      { tipoId: "curp",             nombre: "CURP" },
-      { tipoId: "ine",              nombre: "INE" },
-      { tipoId: "pasaporte",        nombre: "Pasaporte" },
+      { tipoId: "curp", nombre: "CURP" },
+      { tipoId: "ine", nombre: "INE" },
+      { tipoId: "pasaporte", nombre: "Pasaporte" },
       { tipoId: "cartilla_militar", nombre: "Cartilla militar" },
     ],
   },
   {
     categoria: "Fiscal y laboral",
     docs: [
-      { tipoId: "rfc",    nombre: "RFC" },
-      { tipoId: "nss",    nombre: "NSS" },
+      { tipoId: "rfc", nombre: "RFC" },
+      { tipoId: "nss", nombre: "NSS" },
       { tipoId: "efirma", nombre: "EFirma" },
     ],
   },
   {
     categoria: "Registro civil",
-    docs: [
-      { tipoId: "acta_nacimiento", nombre: "Acta de nacimiento" },
-    ],
+    docs: [{ tipoId: "acta_nacimiento", nombre: "Acta de nacimiento" }],
   },
   {
     categoria: "Digital CDMX",
     docs: [
-      { tipoId: "llave_mx",   nombre: "LLAVE MX" },
+      { tipoId: "llave_mx", nombre: "LLAVE MX" },
       { tipoId: "llave_cdmx", nombre: "LLAVE CDMX" },
     ],
   },
@@ -58,14 +56,12 @@ const GRUPOS: { categoria: string; docs: DocumentoInfo[] }[] = [
     categoria: "Contacto",
     docs: [
       { tipoId: "correo_personal", nombre: "Correo personal" },
-      { tipoId: "telefono",        nombre: "Número de teléfono" },
+      { tipoId: "telefono", nombre: "Número de teléfono" },
     ],
   },
   {
     categoria: "Profesional",
-    docs: [
-      { tipoId: "cedula_profesional", nombre: "Cédula profesional" },
-    ],
+    docs: [{ tipoId: "cedula_profesional", nombre: "Cédula profesional" }],
   },
   {
     categoria: "Vehicular",
@@ -81,9 +77,7 @@ const GRUPOS: { categoria: string; docs: DocumentoInfo[] }[] = [
   },
   {
     categoria: "Otros",
-    docs: [
-      { tipoId: "id_secundaria", nombre: "Identificación secundaria" },
-    ],
+    docs: [{ tipoId: "id_secundaria", nombre: "Identificación secundaria" }],
   },
 ];
 
@@ -99,7 +93,7 @@ interface UserDocumento {
 function useDocumentos(token: string) {
   /** Mapa tipoId → id del registro en el API (null = no registrado) */
   const [registrados, setRegistrados] = useState<Map<string, string | null>>(
-    new Map()
+    new Map(),
   );
   const [cargando, setCargando] = useState(true);
 
@@ -116,7 +110,7 @@ function useDocumentos(token: string) {
         const data = (await res.json()) as UserDocumento[];
         if (!cancelled) {
           const mapa = new Map<string, string | null>(
-            GRUPOS.flatMap((g) => g.docs.map((d) => [d.tipoId, null]))
+            GRUPOS.flatMap((g) => g.docs.map((d) => [d.tipoId, null])),
           );
           for (const doc of data) {
             mapa.set(doc.tipoDocumentoId, doc.id);
@@ -127,9 +121,7 @@ function useDocumentos(token: string) {
         // Sin API disponible — iniciamos con todo vacío
         if (!cancelled) {
           setRegistrados(
-            new Map(
-              GRUPOS.flatMap((g) => g.docs.map((d) => [d.tipoId, null]))
-            )
+            new Map(GRUPOS.flatMap((g) => g.docs.map((d) => [d.tipoId, null]))),
           );
         }
       } finally {
@@ -137,7 +129,9 @@ function useDocumentos(token: string) {
       }
     }
     load();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [token]);
 
   /* Toggle: agrega o elimina un documento */
@@ -159,7 +153,7 @@ function useDocumentos(token: string) {
             {
               method: "DELETE",
               headers: { Authorization: `Bearer ${token}` },
-            }
+            },
           );
           if (!res.ok) throw new Error();
           toast.success(`"${nombre}" eliminado de tu perfil.`);
@@ -209,7 +203,7 @@ function useDocumentos(token: string) {
         }
       }
     },
-    [token, registrados]
+    [token, registrados],
   );
 
   const conteo = [...registrados.values()].filter(Boolean).length;
@@ -225,7 +219,9 @@ function PanelContent({ token }: { token: string }) {
     <>
       {/* Sub-encabezado con contador */}
       <div className="flex items-center justify-between px-6 pb-2 pt-1">
-        <span className="text-sm text-secondary">Gestiona tus documentos</span>
+        <span className="text-sm text-brand-900/95">
+          Gestiona tus documentos
+        </span>
         <span className="text-sm font-semibold text-brand-600">
           {conteo} / {TOTAL_DOCS} registrados
         </span>
@@ -239,18 +235,13 @@ function PanelContent({ token }: { token: string }) {
           /* Skeleton */
           <div className="flex flex-col gap-3">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-9 animate-pulse rounded bg-slate-100"
-              />
+              <div key={i} className="h-9 animate-pulse rounded bg-slate-100" />
             ))}
           </div>
         ) : (
           GRUPOS.map((grupo) => (
             <div key={grupo.categoria} className="mb-5">
-              <p className="label-xs mb-2 text-secondary/70">
-                {grupo.categoria}
-              </p>
+              <p className="label-md mb-2 text-brand-600">{grupo.categoria}</p>
               {grupo.docs.map((doc) => {
                 const activo = !!registrados.get(doc.tipoId);
                 return (
@@ -263,13 +254,15 @@ function PanelContent({ token }: { token: string }) {
                       <FileText
                         className={cn(
                           "h-4 w-4 shrink-0",
-                          activo ? "text-brand-600" : "text-slate-400"
+                          activo ? "text-brand-600" : "text-slate-400",
                         )}
                       />
                       <span
                         className={cn(
                           "text-sm",
-                          activo ? "text-body font-medium" : "text-secondary"
+                          activo
+                            ? "text-body font-medium"
+                            : "text-brand-900/95",
                         )}
                       >
                         {doc.nombre}
@@ -307,10 +300,7 @@ export default function DocumentosPanel({ token }: { token: string }) {
         Mis documentos
       </SheetTrigger>
 
-      <SheetContent
-        side="right"
-        className="flex w-80 flex-col p-0 sm:w-96"
-      >
+      <SheetContent side="right" className="flex w-80 flex-col p-0 sm:w-96">
         <SheetHeader className="px-6 pt-5 pb-3">
           <SheetTitle className="text-base font-semibold text-brand-900">
             Mis documentos

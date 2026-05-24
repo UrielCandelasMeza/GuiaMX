@@ -82,7 +82,7 @@ export default async function TramitesPage() {
   if (!session) redirect("/login");
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const token = (session.user as any).apiToken as string ?? "";
+  const token = ((session.user as any).apiToken as string) ?? "";
   const tramites = await fetchTramites(token);
   const list = tramites.length > 0 ? tramites : FALLBACK_TRAMITES;
 
@@ -95,8 +95,9 @@ export default async function TramitesPage() {
             <h1 className="text-2xl font-bold text-brand-900">
               Trámites disponibles
             </h1>
-            <p className="mt-1 text-sm text-secondary">
-              {list.length} trámites · Selecciona uno para ver el detalle paso a paso
+            <p className="mt-1 text-sm text-brando-900/95">
+              {list.length} trámites · Selecciona uno para ver el detalle paso a
+              paso
             </p>
           </div>
 

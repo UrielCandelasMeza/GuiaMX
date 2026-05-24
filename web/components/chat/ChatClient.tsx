@@ -1,12 +1,6 @@
 "use client";
 
-import {
-  useEffect,
-  useRef,
-  useState,
-  useCallback,
-  KeyboardEvent,
-} from "react";
+import { useEffect, useRef, useState, useCallback, KeyboardEvent } from "react";
 import { Bot, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWebSocket, type Message } from "@/hooks/useWebSocket";
@@ -27,13 +21,13 @@ function ConnectionBadge({ connected }: { connected: boolean }) {
         "inline-flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium",
         connected
           ? "bg-green-50 text-green-700"
-          : "bg-slate-100 text-slate-500"
+          : "bg-slate-100 text-slate-500",
       )}
     >
       <span
         className={cn(
           "h-1.5 w-1.5 rounded-full",
-          connected ? "bg-green-500" : "bg-slate-400"
+          connected ? "bg-green-500" : "bg-slate-400",
         )}
       />
       {connected ? "Conectado" : "Desconectado"}
@@ -79,7 +73,7 @@ function MessageBubble({ msg }: { msg: Message }) {
           "max-w-[75%] rounded-lg px-4 py-2 text-[15px] leading-relaxed",
           isUser
             ? "rounded-br-none bg-brand-600 text-white"
-            : "rounded-bl-none border border-slate-200 bg-white text-body"
+            : "rounded-bl-none border border-slate-200 bg-white text-body",
         )}
       >
         {/* Preservar saltos de línea en respuestas del asistente */}
@@ -128,11 +122,13 @@ function EmptyState({ onChip }: { onChip: (text: string) => void }) {
 
 /* ── ChatClient ──────────────────────────────────────────────────────────── */
 export default function ChatClient({ token }: { token: string }) {
-  const { isConnected, isLoading, messages, sendMessage } = useWebSocket({ token });
+  const { isConnected, isLoading, messages, sendMessage } = useWebSocket({
+    token,
+  });
 
-  const [draft, setDraft]     = useState("");
-  const bottomRef             = useRef<HTMLDivElement>(null);
-  const textareaRef           = useRef<HTMLTextAreaElement>(null);
+  const [draft, setDraft] = useState("");
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   /* Auto-scroll al último mensaje */
   useEffect(() => {
@@ -172,7 +168,6 @@ export default function ChatClient({ token }: { token: string }) {
 
   return (
     <div className="flex h-[calc(100vh-4rem)] flex-col">
-
       {/* ── a) HEADER ── */}
       <div className="flex items-center justify-between border-b border-slate-200 bg-white px-6 py-3">
         <div className="flex items-center gap-3">
@@ -225,8 +220,12 @@ export default function ChatClient({ token }: { token: string }) {
               onKeyDown={handleKeyDown}
               disabled={isLoading}
               placeholder="Escribe tu consulta sobre trámites..."
-              className="flex-1 resize-none bg-transparent text-sm text-body outline-none placeholder:text-placeholder disabled:opacity-50"
-              style={{ maxHeight: "96px" }}
+              className="flex-1 resize-none bg-transparent text-sm text-body outline-none border-0 focus:ring-0 placeholder:text-placeholder disabled:opacity-50 overflow-auto py-1.5 m-0"
+              style={{
+                maxHeight: "96px",
+                minHeight: "32px",
+                lineHeight: "1.25rem",
+              }}
             />
             <button
               id="chat-send-btn"
