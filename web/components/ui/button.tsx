@@ -3,23 +3,13 @@ import { cva, type VariantProps } from "class-variance-authority"
 
 import { cn } from "@/lib/utils"
 
-/**
- * Variantes institucionales GuiaMX
- * ─────────────────────────────────
- * default     → bg-brand-600 blanco  (acción principal)
- * outline     → borde brand-800      (acción secundaria)
- * ghost       → transparente brand   (acción terciaria)
- * link        → subrayado brand-600  (enlace en texto)
- * slate       → slate-700            (eliminar / destructivo — nunca rojo vivo)
- * info        → bg-brand-100         (acción informativa suave)
- */
 const buttonVariants = cva(
   [
     "group/button inline-flex shrink-0 items-center justify-center",
     "rounded border border-transparent bg-clip-padding",
     "text-sm font-semibold whitespace-nowrap",
     "transition-colors duration-150 outline-none select-none",
-    "focus-visible:ring-2 focus-visible:ring-brand-600/50",
+    "focus-visible:ring-2 focus-visible:ring-[#0A0A0A]/30",
     "disabled:pointer-events-none disabled:opacity-50",
     "aria-invalid:border-red-400 aria-invalid:ring-2 aria-invalid:ring-red-400/20",
     "[&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
@@ -27,27 +17,24 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        /** Botón primario — azul acento */
         default:
-          "bg-brand-600 text-white hover:bg-brand-800 active:bg-brand-900",
+          "bg-[#0A0A0A] text-white hover:bg-[#222222] active:bg-[#333333]",
 
-        /** Botón secundario — contorno brand-800 */
         outline:
-          "border-brand-800 text-brand-800 bg-transparent hover:bg-brand-50 active:bg-brand-100",
+          "border-[#E5E7EB] text-[#0A0A0A] bg-transparent hover:bg-[#F3F4F6] active:bg-[#E5E7EB]",
 
-        /** Botón terciario / ghost — sin borde */
+        secondary:
+          "bg-[#F3F4F6] text-[#0A0A0A] border-[#E5E7EB] hover:bg-[#E5E7EB] active:bg-[#D1D5DB]",
+
         ghost:
-          "text-brand-600 bg-transparent hover:bg-brand-50 active:bg-brand-100",
+          "text-[#0A0A0A] bg-transparent hover:bg-[#F3F4F6] active:bg-[#E5E7EB]",
 
-        /** Link en texto */
         link:
-          "text-brand-600 underline-offset-4 hover:underline hover:text-brand-800 bg-transparent",
+          "text-[#0A0A0A] underline-offset-4 hover:underline hover:text-[#737373] bg-transparent",
 
-        /** Acción de eliminar — slate oscuro, nunca rojo vivo en UI */
         slate:
-          "bg-transparent text-slate-700 border-slate-300 hover:bg-slate-100 active:bg-slate-200",
+          "bg-transparent text-[#737373] border-[#E5E7EB] hover:bg-[#F3F4F6] active:bg-[#E5E7EB]",
 
-        /** Alerta / info — fondo azul muy claro */
         info:
           "bg-brand-100 text-brand-800 border-brand-100 hover:bg-brand-600/10 active:bg-brand-600/20",
       },

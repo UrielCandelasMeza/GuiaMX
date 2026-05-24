@@ -1,43 +1,38 @@
-import { Building2 } from "lucide-react";
+import { Scale } from "lucide-react";
 
 interface AuthPanelProps {
-  /** Título mostrado bajo el ícono */
   title?: string;
-  /** Subtítulo / descripción */
   description?: string;
 }
 
-/**
- * Panel izquierdo institucional — reutilizable en login y registro.
- * Visible solo en desktop (lg:flex), oculto en mobile.
- */
 export default function AuthPanel({
   title = "GuiaMX",
   description = "Tu guía digital para trámites gubernamentales en México. Información clara, en un solo lugar.",
 }: AuthPanelProps) {
   return (
-    <div className="hidden lg:flex flex-col items-center justify-center gap-6 bg-brand-900 px-12 py-16 text-white h-full">
-      <Building2
-        className="h-16 w-16 text-brand-100 shrink-0"
-        strokeWidth={1.5}
-      />
+    <div className="hidden lg:flex flex-col justify-between bg-[#F7F9FC] border-r border-[#E5E7EB] px-12 py-16 h-full">
+      <div className="flex items-center gap-2">
+        <Scale className="h-5 w-5 text-[#0A0A0A]" strokeWidth={1.75} />
+        <span className="text-base font-semibold tracking-tight text-[#0A0A0A]">
+          TrámitesMX
+        </span>
+      </div>
 
-      <div className="text-center space-y-3 max-w-xs">
-        <h1 className="text-3xl font-bold tracking-tight text-white">
+      <div className="space-y-4 max-w-xs">
+        <h1 className="text-3xl font-bold tracking-tight text-[#0A0A0A] leading-tight">
           {title}
         </h1>
-        <p className="text-brand-100 text-[15px] leading-relaxed">
+        <p className="text-[15px] leading-relaxed text-[#737373]">
           {description}
         </p>
       </div>
 
-      {/* Decorador institucional */}
-      <div className="mt-8 flex items-center gap-2">
-        <div className="h-px w-12 bg-brand-800" />
-        <span className="text-xs font-semibold uppercase tracking-widest text-brand-100/60">
+      <div className="flex items-center gap-3">
+        <div className="h-px w-8 bg-[#E5E7EB]" />
+        <span className="label-xs text-[#A3A3A3]">
           Gobierno de México
         </span>
-        <div className="h-px w-12 bg-brand-800" />
+        <div className="h-px w-8 bg-[#E5E7EB]" />
       </div>
     </div>
   );

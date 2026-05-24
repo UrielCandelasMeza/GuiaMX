@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback, KeyboardEvent } from "react";
-import { Bot, Send } from "lucide-react";
+import { Bot, Send, Mic, MicOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useWebSocket, type Message } from "@/hooks/useWebSocket";
+import { useVoiceInput } from "@/hooks/useVoiceInput";
 import DocumentosPanel from "@/components/chat/DocumentosPanel";
 import MisTramitesPanel from "@/components/chat/MisTramitesPanel";
 
@@ -176,6 +177,12 @@ export default function ChatClient({ token }: { token: string }) {
     textareaRef.current?.focus();
   };
 
+  const { state: voiceState, toggle: toggleVoice } = useVoiceInput({
+    onTranscript: (text) => {
+      setDraft(text);
+    },
+  });
+
   const isEmpty = messages.length === 0;
 
   return (
@@ -225,7 +232,14 @@ export default function ChatClient({ token }: { token: string }) {
       {/* ── c) INPUT ── */}
       <div className="border-t border-slate-200 bg-white px-4 py-3">
         <div className="mx-auto max-w-3xl">
-          <div className="flex items-end gap-2 rounded-md border border-slate-300 bg-white px-3 py-2 focus-within:border-brand-600 transition-colors">
+          <div
+            className={cn(
+              "flex items-end gap-2 rounded-md border bg-white px-3 py-2 transition-colors",
+              voiceState === "listening"
+                ? "border-red-400 ring-2 ring-red-400/20"
+                : "border-slate-300 focus-within:border-[#0A0A0A]",
+            )}
+          >
             <textarea
               id="chat-textarea"
               ref={textareaRef}
@@ -234,7 +248,11 @@ export default function ChatClient({ token }: { token: string }) {
               onChange={(e) => setDraft(e.target.value)}
               onKeyDown={handleKeyDown}
               disabled={isLoading}
-              placeholder="Escribe tu consulta sobre trámites..."
+              placeholder={
+                voiceState === "listening"
+                  ? "Escuchando…"
+                  : "Escribe o habla tu consulta sobre trámites..."
+              }
               className="flex-1 resize-none bg-transparent text-sm text-body outline-none border-0 focus:ring-0 placeholder:text-placeholder disabled:opacity-50 overflow-auto py-1.5 m-0"
               style={{
                 maxHeight: "96px",
@@ -242,12 +260,34 @@ export default function ChatClient({ token }: { token: string }) {
                 lineHeight: "1.25rem",
               }}
             />
+
+            {voiceState !== "unsupported" && (
+              <button
+                type="button"
+                aria-label={voiceState === "listening" ? "Detener grabación" : "Hablar"}
+                onClick={toggleVoice}
+                disabled={isLoading}
+                className={cn(
+                  "mb-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded transition-colors disabled:opacity-40 disabled:cursor-not-allowed",
+                  voiceState === "listening"
+                    ? "bg-red-500 text-white hover:bg-red-600 animate-pulse"
+                    : "bg-[#F3F4F6] text-[#737373] hover:bg-[#E5E7EB] hover:text-[#0A0A0A]",
+                )}
+              >
+                {voiceState === "listening" ? (
+                  <MicOff className="h-4 w-4" />
+                ) : (
+                  <Mic className="h-4 w-4" />
+                )}
+              </button>
+            )}
+
             <button
               id="chat-send-btn"
               aria-label="Enviar mensaje"
               onClick={handleSend}
               disabled={isLoading || !draft.trim()}
-              className="mb-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded bg-brand-600 text-white transition-colors hover:bg-brand-800 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="mb-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded bg-[#0A0A0A] text-white transition-colors hover:bg-[#222222] disabled:opacity-40 disabled:cursor-not-allowed"
             >
               <Send className="h-4 w-4" />
             </button>

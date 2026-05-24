@@ -1,7 +1,6 @@
 import Link from "next/link";
-import { UserPlus, MessageSquare, FileCheck, Scale } from "lucide-react";
+import { ArrowRight, UserPlus, MessageSquare, FileCheck, Scale } from "lucide-react";
 
-/* ── Datos ───────────────────────────────────────────────────────────────── */
 const STEPS = [
   {
     icon: UserPlus,
@@ -38,7 +37,7 @@ const DOCUMENTOS = [
   "Número de teléfono",
   "NSS",
   "RFC",
-  "Licencia vehicular y placa",
+  "Licencia vehicular",
   "Identificación secundaria",
 ] as const;
 
@@ -49,79 +48,131 @@ const FOOTER_LINKS = [
   { href: "/tramites", label: "Trámites" },
 ] as const;
 
-/* ── Page ────────────────────────────────────────────────────────────────── */
 export default function LandingPage() {
   return (
     <>
-      {/* ── HERO ─────────────────────────────────────────────────────────── */}
-      <section className="flex min-h-[70vh] items-center bg-brand-900 text-white">
-        <div className="mx-auto max-w-3xl px-6 py-20 text-center">
-          {/* Chip */}
-          <span className="mb-6 inline-block rounded bg-brand-600/20 px-3 py-1 text-sm tracking-wide text-blue-200">
-            Sistema Inteligente de Trámites
-          </span>
-
-          {/* Heading */}
-          <h1 className="mt-2 text-4xl font-bold leading-tight text-white md:text-5xl">
-            Realiza tus trámites con ayuda de inteligencia artificial
-          </h1>
-
-          {/* Subtítulo */}
-          <p className="mx-auto mt-6 max-w-xl text-[15px] leading-relaxed text-blue-200">
-            TrámitesMX te orienta a través de cualquier gestión gubernamental en
-            México: reúne tus documentos, conoce los pasos exactos y sigue el
-            avance de tu trámite en un solo lugar.
+      {/* ── ANNOUNCEMENT BANNER ───────────────────────────────────────────── */}
+      <div className="w-full bg-gradient-to-r from-fuchsia-600 via-purple-600 to-violet-600 py-2.5 px-6">
+        <div className="mx-auto flex max-w-7xl items-center justify-center gap-4">
+          <p className="text-sm font-semibold text-white text-center">
+            Nuevo: asistente de IA para trámites del SAT y CURP disponible ahora
           </p>
+          <Link
+            href="/registro"
+            className="hidden sm:flex items-center gap-1 text-sm font-semibold text-white/80 hover:text-white transition-colors no-underline shrink-0"
+          >
+            Pruébalo <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      </div>
 
-          {/* CTA buttons */}
-          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link
-              href="/registro"
-              id="hero-cta-registro"
-              className="rounded px-6 py-2.5 text-sm font-semibold text-brand-900 bg-white hover:bg-brand-50 transition-colors no-underline"
-            >
-              Comenzar ahora
+      {/* ── NAVBAR ────────────────────────────────────────────────────────── */}
+      <nav className="w-full border-b border-[#E5E7EB] bg-white px-6">
+        <div className="mx-auto flex h-14 max-w-7xl items-center justify-between">
+          <Link
+            href="/"
+            className="flex items-center gap-2 text-[#0A0A0A] hover:text-[#737373] transition-colors no-underline"
+          >
+            <Scale className="h-4 w-4" strokeWidth={1.75} />
+            <span className="text-sm font-semibold tracking-tight">TrámitesMX</span>
+          </Link>
+
+          <div className="hidden items-center gap-8 md:flex">
+            <Link href="/tramites" className="text-sm font-medium text-[#737373] hover:text-[#0A0A0A] transition-colors no-underline">
+              Trámites
             </Link>
+            <Link href="/login" className="text-sm font-medium text-[#737373] hover:text-[#0A0A0A] transition-colors no-underline">
+              Iniciar sesión
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-2">
             <Link
               href="/login"
-              id="hero-cta-login"
-              className="rounded border border-white px-6 py-2.5 text-sm font-semibold text-white hover:bg-brand-800 transition-colors no-underline"
+              className="hidden sm:inline-flex h-9 items-center rounded px-4 text-sm font-semibold text-[#0A0A0A] bg-[#F3F4F6] hover:bg-[#E5E7EB] transition-colors no-underline"
             >
               Iniciar sesión
             </Link>
+            <Link
+              href="/registro"
+              className="inline-flex h-9 items-center rounded px-4 text-sm font-semibold text-white bg-[#0A0A0A] hover:bg-[#222222] transition-colors no-underline"
+            >
+              Registrarse
+            </Link>
+          </div>
+        </div>
+      </nav>
+
+      {/* ── HERO ──────────────────────────────────────────────────────────── */}
+      <section className="bg-white px-6 pt-24 pb-28">
+        <div className="mx-auto max-w-5xl">
+          <div className="label-xs mb-6 flex items-center gap-2">
+            <span className="inline-block h-1.5 w-1.5 rounded-full bg-[#0A0A0A]" />
+            DISPONIBLE PARA TODOS LOS CIUDADANOS MEXICANOS
+          </div>
+
+          <h1 className="max-w-4xl text-[3.5rem] md:text-[4.5rem] font-black tracking-tight leading-[1.02]">
+            <span className="text-[#0A0A0A]">Realiza tus trámites </span>
+            <span className="text-[#737373]">sin filas, sin confusión,</span>
+            <span className="text-[#0A0A0A]"> con IA.</span>
+          </h1>
+
+          <p className="mt-6 max-w-xl text-[17px] leading-relaxed text-[#737373]">
+            TrámitesMX te orienta en cualquier gestión gubernamental en México.
+            Reúne documentos, conoce los pasos exactos y sigue tu avance en tiempo real.
+          </p>
+
+          <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:items-center">
+            <Link
+              href="/registro"
+              className="inline-flex h-12 items-center rounded px-7 text-[15px] font-semibold text-white bg-[#0A0A0A] hover:bg-[#222222] transition-colors no-underline"
+            >
+              Comenzar gratis
+            </Link>
+            <Link
+              href="/tramites"
+              className="inline-flex h-12 items-center gap-1.5 rounded px-7 text-[15px] font-semibold text-[#0A0A0A] bg-[#F3F4F6] hover:bg-[#E5E7EB] transition-colors no-underline"
+            >
+              Ver trámites <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+
+          <div className="mt-10 flex items-center gap-3">
+            <div className="h-px w-6 bg-[#E5E7EB]" />
+            <span className="label-xs">
+              +16 documentos reconocidos · SAT · IMSS · SRE · INE
+            </span>
           </div>
         </div>
       </section>
 
       {/* ── CÓMO FUNCIONA ─────────────────────────────────────────────────── */}
-      <section className="bg-white px-6 py-20">
+      <section className="bg-[#F7F9FC] border-y border-[#E5E7EB] px-6 py-24">
         <div className="mx-auto max-w-5xl">
-          <h2 className="text-center text-2xl font-bold text-brand-800">
-            ¿Cómo funciona?
+          <div className="label-xs mb-4">CÓMO FUNCIONA</div>
+          <h2 className="max-w-xl text-3xl font-bold tracking-tight text-[#0A0A0A]">
+            Tres pasos para gestionar cualquier trámite
           </h2>
-          <p className="mx-auto mt-3 max-w-xl text-center text-[15px] text-brand-900/95">
-            Tres pasos simples para que cualquier ciudadano pueda gestionar sus
-            trámites sin complicaciones.
+          <p className="mt-3 max-w-md text-[15px] leading-relaxed text-[#737373]">
+            Sin complicaciones ni burocracia. Describe qué necesitas y nosotros hacemos el resto.
           </p>
 
-          <div className="mt-12 grid gap-8 md:grid-cols-3">
+          <div className="mt-14 grid gap-6 md:grid-cols-3">
             {STEPS.map(({ icon: Icon, title, description }, i) => (
               <article
                 key={title}
-                className="rounded-md border border-slate-200 bg-white p-6"
+                className="rounded-lg border border-[#E5E7EB] bg-white p-7 shadow-stripe"
               >
-                {/* Número de paso */}
-                <span className="label-xs mb-3 block text-brand-900/95 ">
-                  Paso {i + 1}
+                <span className="label-xs mb-4 block text-[#A3A3A3]">
+                  0{i + 1}
                 </span>
-                {/* Ícono */}
-                <div className="mb-4 inline-flex rounded bg-brand-100 p-2 text-brand-600">
-                  <Icon className="h-5 w-5" strokeWidth={1.75} />
+                <div className="mb-4 inline-flex rounded-md border border-[#E5E7EB] p-2.5 text-[#0A0A0A]">
+                  <Icon className="h-4 w-4" strokeWidth={1.75} />
                 </div>
-                <h3 className="text-base font-semibold text-brand-900">
+                <h3 className="text-base font-semibold text-[#0A0A0A]">
                   {title}
                 </h3>
-                <p className="mt-2 text-sm leading-relaxed text-brand-900/95">
+                <p className="mt-2 text-sm leading-relaxed text-[#737373]">
                   {description}
                 </p>
               </article>
@@ -130,22 +181,15 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── DOCUMENTOS ────────────────────────────────────────────────────── */}
-      <section className="bg-slate-50 px-6 py-16">
-        <div className="mx-auto max-w-4xl">
-          <h2 className="text-center text-2xl font-bold text-brand-800">
-            Documentos que el sistema reconoce
-          </h2>
-          <p className="mx-auto mt-3 max-w-xl text-center text-[15px] text-brand-900/95">
-            El asistente identifica y te indica exactamente cuáles de estos
-            documentos necesitas para cada trámite.
-          </p>
-
-          <div className="mt-10 flex flex-wrap justify-center gap-2.5">
+      {/* ── DOCUMENTOS TRUST BAND ─────────────────────────────────────────── */}
+      <section className="bg-white border-b border-[#E5E7EB] px-6 py-16">
+        <div className="mx-auto max-w-5xl">
+          <div className="label-xs mb-8 text-center">DOCUMENTOS RECONOCIDOS</div>
+          <div className="flex flex-wrap justify-center gap-x-8 gap-y-4">
             {DOCUMENTOS.map((doc) => (
               <span
                 key={doc}
-                className="rounded border border-brand-100 bg-brand-50 px-3 py-1 text-sm text-brand-800"
+                className="text-sm font-semibold text-[#111111] tracking-tight"
               >
                 {doc}
               </span>
@@ -155,53 +199,57 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA FINAL ─────────────────────────────────────────────────────── */}
-      <section className="bg-brand-900 px-6 py-16 text-center text-white">
-        <div className="mx-auto max-w-2xl">
-          <h2 className="text-2xl font-bold text-white">
-            Empieza a simplificar tus trámites hoy
+      <section className="bg-[#F7F9FC] px-6 py-24">
+        <div className="mx-auto max-w-3xl text-center">
+          <div className="label-xs mb-4">EMPIEZA HOY</div>
+          <h2 className="text-[2.5rem] font-black tracking-tight text-[#0A0A0A] leading-tight">
+            Simplifica tus trámites{" "}
+            <span className="text-[#737373]">de una vez por todas.</span>
           </h2>
-          <p className="mx-auto mt-4 max-w-md text-[15px] text-blue-200">
-            Regístrate gratis y accede a tu asistente personalizado de trámites
-            gubernamentales.
+          <p className="mx-auto mt-5 max-w-md text-[16px] leading-relaxed text-[#737373]">
+            Regístrate gratis y accede a tu asistente personalizado de trámites gubernamentales.
           </p>
-          <Link
-            href="/registro"
-            id="cta-final-registro"
-            className="mt-8 inline-block rounded px-8 py-2.5 text-sm font-semibold text-brand-900 bg-white hover:bg-brand-50 transition-colors no-underline"
-          >
-            Crear cuenta
-          </Link>
+          <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+            <Link
+              href="/registro"
+              className="inline-flex h-12 items-center rounded px-8 text-[15px] font-semibold text-white bg-[#0A0A0A] hover:bg-[#222222] transition-colors no-underline"
+            >
+              Crear cuenta gratis
+            </Link>
+            <Link
+              href="/login"
+              className="inline-flex h-12 items-center rounded px-8 text-[15px] font-semibold text-[#737373] hover:text-[#0A0A0A] transition-colors no-underline"
+            >
+              Ya tengo cuenta
+            </Link>
+          </div>
         </div>
       </section>
 
       {/* ── FOOTER ────────────────────────────────────────────────────────── */}
-      <footer className="border-t border-brand-800 bg-brand-950 px-6 py-10 text-blue-200">
+      <footer className="border-t border-[#E5E7EB] bg-white px-6 py-12">
         <div className="mx-auto max-w-5xl">
           <div className="grid gap-10 md:grid-cols-3">
-            {/* Col 1 — Identidad */}
             <div>
               <div className="mb-3 flex items-center gap-2">
-                <Scale className="h-5 w-5 text-blue-200" strokeWidth={1.5} />
-                <span className="text-base font-semibold text-white">
+                <Scale className="h-4 w-4 text-[#0A0A0A]" strokeWidth={1.75} />
+                <span className="text-sm font-semibold text-[#0A0A0A]">
                   TrámitesMX
                 </span>
               </div>
-              <p className="text-sm leading-relaxed">
-                Plataforma de orientación ciudadana para trámites
-                gubernamentales en México, respaldada por inteligencia
-                artificial.
+              <p className="text-sm leading-relaxed text-[#737373]">
+                Plataforma de orientación ciudadana para trámites gubernamentales en México.
               </p>
             </div>
 
-            {/* Col 2 — Links */}
             <div>
-              <p className="label-xs mb-4 text-blue-200/60">Navegación</p>
-              <ul className="flex flex-col gap-2">
+              <p className="label-xs mb-4">NAVEGACIÓN</p>
+              <ul className="flex flex-col gap-2.5">
                 {FOOTER_LINKS.map(({ href, label }) => (
                   <li key={href}>
                     <Link
                       href={href}
-                      className="text-sm text-blue-200 no-underline transition-colors hover:text-white"
+                      className="text-sm text-[#737373] hover:text-[#0A0A0A] no-underline transition-colors"
                     >
                       {label}
                     </Link>
@@ -210,14 +258,13 @@ export default function LandingPage() {
               </ul>
             </div>
 
-            {/* Col 3 — Legal */}
             <div>
-              <p className="label-xs mb-4 text-blue-200/60">Legal</p>
-              <p className="text-sm leading-relaxed">
+              <p className="label-xs mb-4">LEGAL</p>
+              <p className="text-sm leading-relaxed text-[#737373]">
                 Este sistema es una herramienta de orientación y no sustituye la
                 consulta oficial con las dependencias gubernamentales.
               </p>
-              <p className="mt-4 text-xs text-blue-200/60">
+              <p className="mt-5 text-xs text-[#A3A3A3]">
                 © 2025 TrámitesMX. Todos los derechos reservados.
               </p>
             </div>
