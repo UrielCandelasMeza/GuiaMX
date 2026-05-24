@@ -1,69 +1,112 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
-import { io, Socket } from "socket.io-client";
+import { io, type Socket } from "socket.io-client";
+import { toast } from "sonner";
 
-const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:3001";
+/* ── Types ───────────────────────────────────────────────────────────────── */
+export interface Message {
+  id: string;
+  /** "user" | "assistant" */
+  rol: "user" | "assistant";
+  contenido: string;
+  timestamp: number;
+}
 
-interface UseWebSocketOptions {
-  /** Socket.IO namespace/path, defaults to "/" */
-  namespace?: string;
-  /** Whether to connect automatically on mount */
-  autoConnect?: boolean;
+interface SendContext {
+  tramiteId?: string;
+  pasoId?: string;
 }
 
 interface UseWebSocketReturn {
-  socket: Socket | null;
-  connected: boolean;
-  emit: (event: string, ...args: unknown[]) => void;
-  on: (event: string, handler: (...args: unknown[]) => void) => void;
-  off: (event: string, handler?: (...args: unknown[]) => void) => void;
+  isConnected: boolean;
+  isLoading: boolean;
+  messages: Message[];
+  sendMessage: (prompt: string, context?: SendContext) => void;
 }
 
-export function useWebSocket(
-  opts: UseWebSocketOptions = {}
-): UseWebSocketReturn {
-  const { namespace = "", autoConnect = true } = opts;
+/* ── Hook ────────────────────────────────────────────────────────────────── */
+export function useWebSocket({ token }: { token: string }): UseWebSocketReturn {
   const socketRef = useRef<Socket | null>(null);
-  const [connected, setConnected] = useState(false);
+  const [isConnected, setIsConnected] = useState(false);
+  const [isLoading, setIsLoading]     = useState(false);
+  const [messages, setMessages]       = useState<Message[]>([]);
 
   useEffect(() => {
-    const socket = io(`${WS_URL}${namespace}`, {
-      autoConnect,
+    const WS_URL = process.env.NEXT_PUBLIC_WS_URL ?? "ws://localhost:3001";
+
+    const socket = io(WS_URL, {
+      auth: { token },
       transports: ["websocket"],
+      reconnectionAttempts: 5,
+      reconnectionDelay: 2000,
     });
 
     socketRef.current = socket;
 
-    socket.on("connect", () => setConnected(true));
-    socket.on("disconnect", () => setConnected(false));
+    /* ── Conexión ── */
+    socket.on("connect",    () => setIsConnected(true));
+    socket.on("disconnect", () => setIsConnected(false));
+
+    /* ── Streaming chunk ── */
+    socket.on("chunk", (texto: string) => {
+      setMessages((prev) => {
+        const copy = [...prev];
+        const last = copy[copy.length - 1];
+        // Acumula en el último mensaje del asistente
+        if (last && last.rol === "assistant") {
+          copy[copy.length - 1] = { ...last, contenido: last.contenido + texto };
+        } else {
+          // Primer chunk — crea el mensaje del asistente
+          copy.push({
+            id:        `assistant-${Date.now()}`,
+            rol:       "assistant",
+            contenido: texto,
+            timestamp: Date.now(),
+          });
+        }
+        return copy;
+      });
+    });
+
+    /* ── Fin del stream ── */
+    socket.on("fin", () => setIsLoading(false));
+
+    /* ── Error ── */
+    socket.on("error", (msg?: string) => {
+      toast.error(msg ?? "Error en el asistente. Inténtalo de nuevo.");
+      setIsLoading(false);
+    });
 
     return () => {
       socket.disconnect();
     };
-  }, [namespace, autoConnect]);
+    // token solo cambia en re-login; intencionalmente incluido
+  }, [token]);
 
-  const emit = useCallback((event: string, ...args: unknown[]) => {
-    socketRef.current?.emit(event, ...args);
-  }, []);
+  /* ── sendMessage ─────────────────────────────────────────────────────── */
+  const sendMessage = useCallback(
+    (prompt: string, context?: SendContext) => {
+      const trimmed = prompt.trim();
+      if (!trimmed || !socketRef.current) return;
 
-  const on = useCallback(
-    (event: string, handler: (...args: unknown[]) => void) => {
-      socketRef.current?.on(event, handler);
+      // 1. Agrega mensaje del usuario inmediatamente
+      const userMsg: Message = {
+        id:        `user-${Date.now()}`,
+        rol:       "user",
+        contenido: trimmed,
+        timestamp: Date.now(),
+      };
+      setMessages((prev) => [...prev, userMsg]);
+
+      // 2. Emite evento al servidor
+      socketRef.current.emit("mensaje", { prompt: trimmed, ...context });
+
+      // 3. Activa loading
+      setIsLoading(true);
     },
     []
   );
 
-  const off = useCallback(
-    (event: string, handler?: (...args: unknown[]) => void) => {
-      if (handler) {
-        socketRef.current?.off(event, handler);
-      } else {
-        socketRef.current?.off(event);
-      }
-    },
-    []
-  );
-
-  return { socket: socketRef.current, connected, emit, on, off };
+  return { isConnected, isLoading, messages, sendMessage };
 }

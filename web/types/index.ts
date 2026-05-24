@@ -1,87 +1,67 @@
-// ─── Auth ────────────────────────────────────────────────────────────────────
+// ─── Auth / Usuario ───────────────────────────────────────────────────────────
 
 export interface User {
   id: string;
   nombre: string;
-  email: string;
-  createdAt: string;
-}
-
-export interface Session {
-  user: User;
-  token: string;
-  expiresAt: string;
+  apellidos: string;
+  correo: string;
 }
 
 // ─── Trámites ─────────────────────────────────────────────────────────────────
 
-export type TramiteEstado =
-  | "pendiente"
-  | "en_proceso"
-  | "completado"
-  | "requiere_atencion";
-
 export interface Tramite {
   id: string;
-  titulo: string;
+  nombre: string;
   descripcion: string;
-  estado: TramiteEstado;
-  pasos: Paso[];
-  documentos: Documento[];
-  createdAt: string;
-  updatedAt: string;
+  monto: number;
+  _count?: { pasos: number };
 }
 
 // ─── Pasos ────────────────────────────────────────────────────────────────────
 
 export interface Paso {
   id: string;
-  numero: number;
+  orden: number;
   titulo: string;
-  descripcion?: string;
-  completado: boolean;
-  tramiteId: string;
+  descripcionCorta: string;
+  descripcionLarga?: string;
+  anteriores: Paso[];
+  siguientes: Paso[];
+  documentosRequeridos: TipoDocumento[];
 }
 
 // ─── Documentos ───────────────────────────────────────────────────────────────
 
-export interface Documento {
+export interface TipoDocumento {
   id: string;
+  tipo: string;
+  nombre: string;
+}
+
+export interface UserDocumento {
+  id: string;
+  tipoDocumento: TipoDocumento;
+  verificado: boolean;
+}
+
+/** Resultado del endpoint GET /tramites/:id/compatibilidad */
+export interface DocumentoCompatibilidad {
   nombre: string;
   requerido: boolean;
-  url?: string;
-  tramiteId: string;
+  /** true = el usuario ya tiene este documento en su perfil */
+  disponible: boolean;
 }
 
 // ─── Chat ─────────────────────────────────────────────────────────────────────
 
-export type ChatRole = "user" | "assistant" | "system";
+export type RolMensaje = "USER" | "ASSISTANT" | "SYSTEM";
 
-export interface ChatMessage {
+export interface Message {
   id: string;
-  role: ChatRole;
-  content: string;
-  createdAt: string;
+  rol: RolMensaje;
+  contenido: string;
+  timestamp: Date;
 }
 
-export interface ChatSession {
-  id: string;
-  userId: string;
-  messages: ChatMessage[];
-  createdAt: string;
-}
+// NextAuth Session augmentation lives in lib/auth.ts to avoid duplicate declarations.
 
-// ─── API Responses ────────────────────────────────────────────────────────────
-
-export interface ApiError {
-  message: string;
-  statusCode: number;
-}
-
-export interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-}
