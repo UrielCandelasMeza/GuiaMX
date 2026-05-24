@@ -4,9 +4,9 @@
   "main": "src/index.ts",
   "type": "module",
   "scripts": {
-    "start": "bun run --env-file=.env src/index.ts",
+    "start": "bun run src/index.ts",
     "dev": "bun --env-file=.env --watch src/index.ts",
-    "build": "tsc",
+    "build": "bun prisma generate",
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio"
   },
