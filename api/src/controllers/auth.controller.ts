@@ -54,6 +54,7 @@ export const register = async (req: Request, res: Response) => {
 export const login = async (req: Request, res: Response) => {
   try {
     const { correo, password } = req.body;
+    console.log("[LOGIN] Recibido POST /auth/login con:", { correo });
 
     if (!correo || !password) {
       return res
@@ -66,11 +67,13 @@ export const login = async (req: Request, res: Response) => {
     });
 
     if (!user) {
+      console.log("[LOGIN] Usuario no encontrado:", correo);
       return res.status(401).json({ error: "Credenciales inválidas" });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
+      console.log("[LOGIN] Contraseña inválida para:", correo);
       return res.status(401).json({ error: "Credenciales inválidas" });
     }
 
@@ -81,6 +84,7 @@ export const login = async (req: Request, res: Response) => {
       apellidos: user.apellidos,
     });
 
+    console.log("[LOGIN] Login exitoso para:", correo);
     return res.status(200).json({
       id: user.id,
       nombre: user.nombre,
@@ -90,7 +94,7 @@ export const login = async (req: Request, res: Response) => {
       expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
     });
   } catch (error) {
-    console.error("Error en login:", error);
+    console.error("[LOGIN] Error en login:", error);
     return res.status(500).json({ error: "Ocurrió un error en el servidor" });
   }
 };
