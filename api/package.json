@@ -6,7 +6,7 @@
   "scripts": {
     "start": "bun run src/index.ts",
     "dev": "bun --env-file=.env --watch src/index.ts",
-    "build": "bun prisma generate",
+    "build": "DATABASE_URL=postgres://dummy bun prisma generate && tsc",
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio"
   },
